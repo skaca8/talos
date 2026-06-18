@@ -525,6 +525,111 @@ function elapsedMin(ms){return Math.max(1,Math.round((Date.now()-ms)/60000));}
 function room(n){return S.rooms.find(r=>r.n===Number(n));}
 function statusLabel(st){return{ready:'준비완료',cleaning:'청소중',dirty:'미청소',hold:'판매보류',ooo:'OOO'}[st];}
 function statusDot(st){return{ready:'#2f9e69',cleaning:'#f2602e',dirty:'#e5a02b',hold:'#b6afa3',ooo:'#b6afa3'}[st];}
+/* ============== i18n (KR/EN 토글) — 렌더 출력 한글을 영문으로 후처리 ============== */
+const I18N_PAIRS=[
+ [`준비완료`,`Ready`],[`청소중`,`Cleaning`],[`미청소`,`Dirty`],[`판매보류`,`On Hold`],[`판매 보류`,`On Hold`],
+ [`긴급`,`Urgent`],[`일반`,`Normal`],[`미조치`,`Open`],[`AI 검토`,`AI Review`],
+ [`조치 완료 처리`,`Mark Resolved`],[`● 조치 완료`,`● Resolved`],[`조치 완료`,`Resolved`],[`조치완료`,`Resolved`],
+ [`확인 필요`,`Needs Review`],[`재점검 필요`,`Needs Recheck`],[`조치중`,`In Progress`],[`확인`,`Verify`],
+ [`시설`,`Facility`],[`소모품`,`Supplies`],
+ [`관제`,`Control`],[`개념 패널`,`Concept Panel`],[`폰 숨김`,`Hide Phone`],[`폰 표시`,`Show Phone`],
+ [`객실 매트릭스`,`Room Matrix`],[`체크인 임박`,`Check-in soon`],[`체크인`,`Check-in`],[`체크아웃`,`Check-out`],
+ [`담당자 상세`,`Assignee Detail`],[`담당자`,`Assignee`],[`진행 중`,`In Progress`],[`진행중`,`In Progress`],[`진행`,`In Progress`],
+ [`이슈 리스트`,`Issue List`],[`현장 발화로 수집된 객실 이슈`,`Room issues collected from field reports`],
+ [`→ 시설팀 Owen`,`→ Facilities Owen`],[`긴급 피드`,`Urgent Feed`],[`디스패처 → 객실관리자 발송 이력`,`Dispatcher → Room Manager send history`],
+ [`보기 전용`,`Read only`],[`욕실 타일 균열, 누수 위험`,`Bathroom tile crack, leak risk`],[`욕실 타일 균열`,`Bathroom tile crack`],
+ [`● 청소중`,`● Cleaning`],[`● 대기`,`● Waiting`],[`완료/배정`,`Done/Assigned`],[`평균소요`,`Avg Time`],[`평균 소요`,`Avg Time`],
+ [`데일리 현황`,`Daily Status`],[`하우스키핑 5명 · 클릭 시 담당자 상세`,`5 Housekeeping staff · Click for assignee detail`],
+ [`내 작업 순서`,`My Task Order`],[`담당`,`Assignee`],[`미배정`,`Unassigned`],
+ [`오늘 처리 객실 타임라인`,`Today's Room Timeline`],[`오늘 타임라인`,`Today's Timeline`],
+ [`SLA 준수`,`SLA Compliance`],[`상태 변경 이력`,`Status Change History`],[`등록된 이슈가 없습니다.`,`No issues registered.`],
+ [`리마크`,`Remarks`],[`현재 상태: `,`Status: `],[`현재 상태`,`Status`],[`현재 조치`,`Current Action`],[`현재`,`Current`],
+ [`첨부 사진 + AI 판독 소견 (없음)`,`Photos + AI analysis (none)`],[`첨부 사진 + AI 판독`,`Photos + AI Analysis`],
+ [`첨부 사진 없음`,`No Photos`],[`첨부 사진`,`Photos`],
+ [`현장 발화 접수`,`Field report received`],[`AI 분류 · `,`AI Classification · `],[`판단`,`Decision`],
+ [`객실관리자 확인 중`,`Room Manager reviewing`],[`시설팀 조치`,`Facilities action`],[`예정`,`Scheduled`],
+ [`누수`,`Leak`],[`점검`,`Inspection`],[`이슈 요약`,`Issue Summary`],[`원문`,`Transcript`],[`조치 정보`,`Action Info`],
+ [`유형`,`Type`],[` 발생 · 신고 `,` reported · by `],[`신고자`,`Reporter`],[`신고 `,`Reported by `],[`신고`,`Reported`],
+ [`처리 타임라인`,`Action Timeline`],[`현장 앱 · 하우스키핑`,`Field App · Housekeeping`],[`현장 앱 · 객실관리자`,`Field App · Room Manager`],
+ [`하우스키핑 폰`,`Housekeeping Phone`],[`하우스키핑 발화`,`Housekeeping utterance`],[`하우스키핑`,`Housekeeping`],
+ [`객실관리자`,`Room Manager`],[`데모용 · 실서비스는 앱 분리`,`Demo only · Production uses separate apps`],
+ [`님`,``],[`배정`,`Assigned`],[`완료 · 소요`,`Done · took`],[`완료`,`Done`],
+ [`청소 · 기준`,`cleaning · target`],[`기준`,`target`],[`준비되면 시작하세요.`,`Start when ready.`],
+ [`청소 시작`,`Start Cleaning`],[`청소 완료`,`Finish Cleaning`],[`경과 시간`,`Elapsed time`],[`이슈 말하기`,`Report Issue`],
+ [`대시보드로 전송되었습니다.`,`Sent to the dashboard.`],[`목록으로`,`Back to List`],[`목록`,`List`],
+ [`미조치 이슈를 모두 표시합니다`,`Showing all open issues`],[`객실 이슈`,`Room Issues`],
+ [`긴급은 즉시 조치, 일반은 순차 처리됩니다`,`Urgent items handled immediately; normal items in order`],
+ [`긴급 알림`,`Urgent Alert`],[`AI 정리`,`AI Summary`],[`(하우스키핑)`,`(Housekeeping)`],[`분류`,`Category`],
+ [`이 환경에서는 음성 인식을 지원하지 않습니다. 텍스트로 입력해 주세요.`,`Voice recognition is not supported in this environment. Please type instead.`],
+ [`듣고 있어요… 끝나면 다시 누르세요`,`Listening… tap again when done`],
+ [`말씀하시고 끝내면 AI가 알아서 처리합니다`,`Just speak; AI handles the rest when you finish`],
+ [`실시간 받아쓰기`,`Live Transcription`],[`이슈가 있나요?`,`Got an issue?`],[`현재 작업: `,`Current task: `],
+ [`객실번호는 말하지 않아도 됩니다`,`You don't need to say the room number`],
+ [`텍스트로 입력`,`Enter as text`],[`사진 첨부`,`Attach photo`],[`전송 중…`,`Sending…`],[`전송`,`Send`],
+ [`현장`,`Field`],[`변환`,`Conversion`],[`음성 → 텍스트`,`Voice → Text`],[`발화를 실시간 텍스트로 받아씀`,`Transcribes the utterance to text in real time`],
+ [`AI 처리`,`AI Processing`],[`리스닝 에이전트가 발화를 이해합니다.`,`The listening agent understands the utterance.`],[`리스닝 에이전트`,`Listening Agent`],
+ [`내용 이해 · 핵심 추출`,`Understands content · Extracts key points`],[`디스패처가 전체 보드를 보고 무엇을 바꿀지 결정합니다.`,`The dispatcher reviews the whole board and decides what to change.`],
+ [`디스패처`,`Dispatcher`],[`전체 보드 판단 중`,`Evaluating the whole board`],[`보드 전체 판단`,`Whole-board decision`],
+ [`결과·출력`,`Result · Output`],[`결과 · 출력`,`Result · Output`],[`대시보드`,`Dashboard`],[`객실 상태 보드`,`Room Status Board`],
+ [`1203호 청소완료 → 판매 보류`,`Room 1203 cleaned → On Hold`],[`이슈 리마크`,`Issue Remark`],[`1203 · 욕실 타일 균열`,`1203 · Bathroom tile crack`],
+ [`[긴급] 1203호 욕실 타일 균열 — 확인 요망`,`[Urgent] Room 1203 bathroom tile crack — please verify`],
+ [`우선순위 재조정`,`Priority Re-sorting`],[`1순위 1108호 · 2순위 1203호`,`#1 Room 1108 · #2 Room 1203`],
+ [`시작 전`,`Before start`],[`화면을 클릭하면 1203호 시나리오가 시작됩니다.`,`Click the screen to start the Room 1203 scenario.`],
+ [`시나리오`,`Scenario`],[`1203호 · 욕실 타일 균열 · 1108호 재배정`,`Room 1203 · Bathroom tile crack · Room 1108 reassigned`],
+ [`1단계 · 발화`,`Step 1 · Utterance`],[`하우스키핑이 청소 완료와 이슈를 한 번에 말합니다.`,`Housekeeping reports the finished cleaning and the issue at once.`],
+ [`입력`,`Input`],[`2단계 · 변환`,`Step 2 · Conversion`],[`음성이 실시간 텍스트로 변환됩니다.`,`The voice is converted to text in real time.`],
+ [`3단계 · 이해`,`Step 3 · Understanding`],[`핵심 추출 · 분류`,`Key extraction · Classification`],
+ [`4단계 · 판단`,`Step 4 · Decision`],[`5단계 · 보드 반영`,`Step 5 · Board update`],[`객실 상태가 자동 갱신됩니다.`,`The room status updates automatically.`],
+ [`1203 → 판매 보류`,`1203 → On Hold`],[`6단계 · 알림`,`Step 6 · Alert`],[`긴급 이슈가 객실관리자에게 전달됩니다.`,`The urgent issue is sent to the room manager.`],
+ [`알림`,`Alert`],[`[긴급] 1203 확인 요망`,`[Urgent] 1203 please verify`],[`7단계 · 재배정`,`Step 7 · Reassignment`],
+ [`하우스키핑 우선순위가 재조정됩니다.`,`Housekeeping priorities are re-sorted.`],[`1순위 1108 · 2순위 1203`,`#1 1108 · #2 1203`],
+ [`MAREBITO · 작동 원리`,`MAREBITO · How It Works`],[`말 한마디가`,`A single spoken word`],[`호텔을 움직이는 과정`,`sets the hotel in motion`],
+ [`으로 시작합니다`,`to start`],[`클릭`,`Click`],
+ [`객실 상세`,`Room Details`],[`다음 체크인 예정`,`Next Check-in Scheduled`],[`나`,`Me`],[`이슈`,`Issues`],
+ [`표준`,`Standard`],[`빠른정비`,`Quick Turnaround`],[`스위트`,`Suite`],[`장기투숙`,`Long-stay`],[`디럭스`,`Deluxe`],[`심층청소`,`Deep Clean`],[`점검정비`,`Maintenance Check`],
+ [`에어컨 누수`,`AC leak`],[`냉장고 미작동`,`Fridge not working`],[`어메니티 부족`,`Amenities short`],[`전등 깜빡임`,`Flickering light`],[`미니바 보충`,`Minibar restock`],
+ [`시설팀`,`Facilities`],[`당직`,`On Duty`],
+ [`미조치 이슈를 `,`Showing all `],[`모두`,`open`],[` 표시합니다`,` issues`],
+ [`에어컨에서 물이 떨어짐`,`Water dripping from the AC`],[`냉장고가 작동하지 않습니다`,`The fridge is not working`],[`수건·어메니티가 부족합니다`,`Towels and amenities are short`],[`전등 깜빡임이 보고되어 시설팀 조치가 완료되었습니다`,`A flickering light was reported and Facilities resolved it`],[`미니바 보충이 필요합니다`,`Minibar restock required`],
+ [`누수·안전 위험으로 분류되어 즉시 판매 보류 처리되었습니다`,`Classified as a leak/safety hazard and immediately set to On Hold`],[`누수 위험으로 분류되어 판매 보류 처리되었습니다`,`Classified as a leak risk and set to On Hold`],[`시설팀 점검이 필요합니다`,`Facilities inspection required`],[`시설 점검이 필요합니다`,`Facilities inspection required`],[`소모품 보충이 필요합니다`,`Supplies restock required`],
+ [`새 탭으로 열기`,`Open in new tab`],[`이미지를 불러올 수 없음`,`Image could not be loaded`],
+ [`언어 선택`,`Language`],[`여기서 한국어 / English로 화면을 전환할 수 있어요.`,`Switch between 한국어 / English here.`],
+ [`마이크 권한이 차단됨 — 주소창 자물쇠에서 허용해 주세요.`,`Microphone access is blocked — allow it from the lock icon in the address bar.`],
+ [`음성 인식 서비스 권한이 차단되었습니다.`,`Speech recognition service access is blocked.`],
+ [`마이크를 찾을 수 없습니다. 연결을 확인하세요.`,`No microphone found. Please check the connection.`],
+ [`네트워크 오류로 음성 인식이 중단되었습니다.`,`Speech recognition stopped due to a network error.`],
+ [`음성이 감지되지 않았습니다. 다시 시도해 주세요.`,`No speech detected. Please try again.`],
+ [`음성 인식이 중단되었습니다.`,`Speech recognition was stopped.`],
+ [`한국어 음성 인식이 지원되지 않는 환경입니다.`,`Korean speech recognition is not supported here.`],
+ [`음성 인식 오류: `,`Speech recognition error: `],[`HTTPS 또는 localhost에서만 음성 인식이 됩니다.`,`Speech recognition only works on HTTPS or localhost.`],
+ [`음성 인식을 시작하지 못했습니다. 다시 눌러 주세요.`,`Failed to start speech recognition. Please press again.`],
+ [`음성·사진·텍스트 중 하나를 입력하세요`,`Enter at least one of voice, photo, or text`],[`에이전트 처리 중…`,`Agent processing…`],
+ [`서버 응답 `,`Server response `],[`오류: 객실을 찾을 수 없습니다`,`Error: Room not found`],[`오류: 사진을 읽을 수 없습니다`,`Error: Unable to read photo`],[`오류: `,`Error: `],
+ [`이미 접수된 내용입니다`,`Already reported`],[`처리되었습니다`,`Processed`],
+ [`보고 내용을 입력하세요 (입력 후 전송 버튼)`,`Enter your report (then press Send)`],
+];
+const I18N_DICT={}; I18N_PAIRS.forEach(p=>{I18N_DICT[p[0]]=p[1];});
+let _i18nKeys=null;
+function i18n(s){
+  if(S.lang!=='en'||typeof s!=='string'||!s)return s;
+  if(!_i18nKeys)_i18nKeys=Object.keys(I18N_DICT).sort((a,b)=>b.length-a.length);
+  for(const k of _i18nKeys){if(s.indexOf(k)!==-1)s=s.split(k).join(I18N_DICT[k]);}
+  s=s.replace(/(\d+)호/g,'Rm $1').replace(/(\d+)분/g,'$1 min').replace(/(\d+)실/g,'$1').replace(/(\d+)건/g,'$1');
+  return s;
+}
+function translateNode(root){
+  if(S.lang!=='en'||!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  const arr=[];let n;while(n=w.nextNode())arr.push(n);
+  arr.forEach(t=>{const v=t.nodeValue;if(v&&/[가-힣]/.test(v)){const nv=i18n(v);if(nv!==v)t.nodeValue=nv;}});
+}
+const _i18nObserver=new MutationObserver(muts=>{
+  if(S.lang!=='en')return;
+  for(const m of muts)m.addedNodes.forEach(node=>{
+    if(node.nodeType===3){const v=node.nodeValue;if(v&&/[가-힣]/.test(v)){const nv=i18n(v);if(nv!==v)node.nodeValue=nv;}}
+    else if(node.nodeType===1)translateNode(node);
+  });
+});
 function staffName(id){const s=STAFF.find(x=>x.id===id);return s?s.name:'';}
 function kpiCounts(){
   let ready=0,cleaning=0,dirty=0,hold=0;
@@ -631,7 +736,7 @@ function renderMatrix(){
 }
 function renderIssues(){
   const stTxt={open:'미조치',review:'AI 검토',resolved:'조치완료'};
-  const rows=S.issues.map(i=>`<div class="issue-row" data-act="issue" data-id="${i.id}">
+  const rows=S.issues.filter(i=>i.status!=='resolved').map(i=>`<div class="issue-row" data-act="issue" data-id="${i.id}">
     <span class="ir-rno">${i.room}</span>
     <div class="ir-mid"><div class="ir-txt">${i.short==='욕실 타일 균열'?'욕실 타일 균열, 누수 위험':i.summary.split('.')[0]}</div>
       <div class="ir-badges">${i.urgency==='urgent'?'<span class="b-urg">긴급</span>':'<span class="b-norm">일반</span>'}<span class="b-stat">${stTxt[i.status]}</span></div></div>
@@ -1204,7 +1309,7 @@ document.addEventListener('click',(e)=>{
   switch(a){
     case'view':S.view=el.dataset.view;if(S.view==='concept')S.conceptStep=0;renderAll();break;
     case'toggle-phone':S.showPhone=!S.showPhone;renderGbar();renderPhone();break;
-    case'lang':S.lang=el.dataset.lang;if(!S.langCoachSeen){S.langCoachSeen=true;renderCoach();}renderGbar();break;
+    case'lang':S.lang=el.dataset.lang;if(!S.langCoachSeen)S.langCoachSeen=true;renderAll();renderCoach();if(S.lang==='en')translateNode(document.body);break;
     case'coach-ok':S.langCoachSeen=true;renderCoach();break;
     case'floor':S.matrixFloor=Number(el.dataset.floor);renderDash();break;
     case'cell':{const n=el.dataset.room,iss=issueOf(n);if(iss&&iss.urgency==='urgent')openSlide('issue',iss.id);else openSlide('room',n);break;}
@@ -1273,6 +1378,8 @@ setInterval(()=>{
 /* ============== INIT ============== */
 function init(){
   fitStage();renderAll();
+  _i18nObserver.observe(document.body,{childList:true,subtree:true});
+  if(S.lang==='en')translateNode(document.body);
   if(window.location.protocol==='file:'||!window.isSecureContext){console.warn('비보안 컨텍스트: 음성 인식이 제한될 수 있습니다.');}
 }
 init();
