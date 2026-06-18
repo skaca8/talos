@@ -544,6 +544,8 @@ function staffStats(id){
   return{doneN,assigned,avg,sla,issueN,cur,cleaning:inprog.length>0};
 }
 function issueOf(roomN){return S.issues.find(i=>i.room===Number(roomN)&&i.status!=='resolved');}
+/* 단일 규칙: 준비완료 = 청소완료(doneMs) AND 미처리 이슈 없음. 청소했어도 이슈 남으면 판매보류 유지. */
+function settleRoom(n){const r=room(n);if(!r)return;if(issueOf(n))r.status='hold';else if(r.doneMs)r.status='ready';else if(r.inProgress)r.status='cleaning';else r.status='dirty';}
 /* effective toggle state for issue detail buttons; default open/review=active resolve, resolved=recheck */
 function toggleState(iss){
   if(S.issueToggle[iss.id])return S.issueToggle[iss.id]; // user-set
@@ -812,10 +814,20 @@ function renderPhone(){
     </div></div>`;
 }
 function hkRooms(){
-  const p=PLAN['hk-kim'];const list=[];
-  if(p.cur)list.push({n:p.cur,k:'prog'});
-  p.todo.forEach(n=>list.push({n,k:'todo'}));
-  p.done.forEach(n=>list.push({n,k:'done'}));
+  // 배정 객실 집합은 시드(cur+todo+done)로 고정하되, 각 객실은 현재 state.rooms 상태로 동적 분류.
+  // (정적 시드 위치로 그리면 청소 완료해도 todo에 남는 버그가 생김 — 수정내역 2차#3·3차#1)
+  const p=PLAN['hk-kim'];const ids=[];
+  const add=n=>{if(n&&ids.indexOf(n)<0)ids.push(n);};
+  add(p.cur);p.todo.forEach(add);p.done.forEach(add);
+  const prog=[],todo=[],done=[];
+  ids.forEach(n=>{const r=room(n);if(!r)return;
+    if(r.status==='cleaning')prog.push(n);
+    else if(r.doneMs)done.push(n);   // 청소완료(준비완료/판매보류 모두) → 청소할 목록에서 제외
+    else todo.push(n);});
+  const list=[];
+  prog.forEach(n=>list.push({n,k:'prog'}));
+  todo.forEach(n=>list.push({n,k:'todo'}));
+  done.forEach(n=>list.push({n,k:'done'}));
   return list;
 }
 function hkList(){
@@ -837,10 +849,11 @@ function hkList(){
           <div class="hk-meta">${r.type} ${t.label} · ${t.sla}분 ${soon}</div></div>
         <span class="ir-arrow">${IC.cr}</span></div>`;
     }
+    const hold=r.status==='hold';
     return`<div class="hk-card" data-act="hk-room" data-room="${it.n}">
         <div class="hk-num">${IC.check}</div>
         <div class="hk-info"><div class="hk-rno">${it.n}호</div>
-          <div class="hk-meta"><span class="tag-done">${IC.check} 준비완료</span></div></div></div>`;
+          <div class="hk-meta"><span class="tag-done"${hold?' style="background:#fbe9e7;color:#c0392b"':''}>${IC.check} ${hold?'판매보류':'준비완료'}</span></div></div></div>`;
   }).join('');
   return`<div class="hk-list">
     <div class="hk-greet">Marcus 님</div>
@@ -873,22 +886,28 @@ function hkWork(){
     ${mid}<div class="work-foot">${foot}</div></div>`;
 }
 function rmList(){
-  return S.issues.filter(i=>i.urgency==='urgent').sort((a,b)=>(a.status==='resolved')-(b.status==='resolved'));
+  // 미조치 이슈를 모두 표시(긴급 먼저, 조치완료는 뒤로). resolved 만 하단에 이력으로 남김.
+  return S.issues.slice().sort((a,b)=>
+    (a.status==='resolved')-(b.status==='resolved') ||
+    (b.urgency==='urgent')-(a.urgency==='urgent'));
 }
 function rmInbox(){
   const cards=rmList().map(i=>{
     const done=i.status==='resolved';
+    const urgent=i.urgency==='urgent';
+    const badge=done?'<span class="badge-done">● 조치 완료</span>'
+      :(urgent?'<span class="badge-urgent">긴급</span>':'<span class="badge-urgent" style="background:#eef0f2;color:#5b6470">일반</span>');
     return`<div class="rm-card ${done?'muted':''}" data-act="rm-issue" data-id="${i.id}">
-      <span class="rm-dot" style="background:${done?'#d8d3ca':'#d64545'}"></span>
-      <div class="rm-cinfo"><div class="rm-crno">${i.room}호 ${done?'<span class="badge-done">● 조치 완료</span>':'<span class="badge-urgent">긴급</span>'}</div>
+      <span class="rm-dot" style="background:${done?'#d8d3ca':(urgent?'#d64545':'#9aa3ad')}"></span>
+      <div class="rm-cinfo"><div class="rm-crno">${i.room}호 ${badge}</div>
         <div class="rm-ctxt">${i.short}</div>
         <div class="rm-cmeta">${i.time} · ${done?'조치 완료':'신고 '+i.reporter}</div></div>
       ${done?'':`<span class="ir-arrow">${IC.cr}</span>`}</div>`;
   }).join('');
   return`<div class="rm">
-    <div class="rm-title">긴급 알림</div>
-    <div class="rm-sub">안전·시설 <b>긴급 이슈만</b> 알려드립니다</div>
-    <div class="rm-banner">${IC.bell} 소모품·일반 이슈는 디스패처가 자동 처리합니다</div>
+    <div class="rm-title">객실 이슈</div>
+    <div class="rm-sub">미조치 이슈를 <b>모두</b> 표시합니다</div>
+    <div class="rm-banner">${IC.bell} 긴급은 즉시 조치, 일반은 순차 처리됩니다</div>
     ${cards}</div>`;
 }
 function rmDetail(){
@@ -1122,6 +1141,7 @@ async function sendReport(){
     if(!res.ok){throw new Error('서버 응답 '+res.status);}
     const d=await res.json();
     applyResult(d,S.transcript.trim(),S.photos.slice());
+    S.hkScreen='list';S.hkRoom=null;   // 전송 후 작업화면 → 하우스키핑 객실 목록 복귀
     closeSheet();
   }catch(err){
     console.error('/report 실패:',err);
@@ -1132,6 +1152,7 @@ async function sendReport(){
 }
 function applyResult(d,rawText,photos){
   const r=room(d.room);if(!r){toast('오류: 객실을 찾을 수 없습니다');return;}
+  if(/심각/.test(d.ai_read||''))d.urgency='urgent';   // AI 판독 위험도 '심각' → 긴급 배지 연동
   const existingIssue=issueOf(d.room);
   if(d.duplicate&&existingIssue){toast(d.room+'호 · 이미 접수된 내용입니다','•');return;}
   if(!d.review){r.status=d.room_status||(d.has_issue?'hold':'ready');}
@@ -1190,13 +1211,17 @@ document.addEventListener('click',(e)=>{
     case'issue':openSlide('issue',el.dataset.id);break;
     case'staff':openSlide('staff',el.dataset.id);break;
     case'slide-close':closeSlide();break;
-    case'issue-resolve':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='open'){S.issueToggle[id]='resolved';const iss=S.issues.find(i=>i.id===id);iss.status='resolved';const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';renderSlide();renderDash();}break;}
-    case'issue-recheck':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='resolved'){S.issueToggle[id]='open';const iss=S.issues.find(i=>i.id===id);iss.status='open';renderSlide();renderDash();}break;}
+    case'issue-resolve':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='open'){S.issueToggle[id]='resolved';const iss=S.issues.find(i=>i.id===id);iss.status='resolved';settleRoom(iss.room);const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';renderSlide();renderDash();renderPhone();}break;}
+    case'issue-recheck':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='resolved'){S.issueToggle[id]='open';const iss=S.issues.find(i=>i.id===id);iss.status='open';settleRoom(iss.room);renderSlide();renderDash();renderPhone();}break;}
     case'role':S.phoneRole=el.dataset.role;renderPhone();break;
-    case'hk-room':{const n=Number(el.dataset.room),r=room(n);S.hkRoom=n;S.hkScreen=r.status==='cleaning'?'progress':'start';renderPhone();break;}
+    case'hk-room':{const n=Number(el.dataset.room),r=room(n);
+      if(r.status==='cleaning'){S.hkRoom=n;S.hkScreen='progress';renderPhone();}        // 진행중 → 완료 처리 진입
+      else if(r.status==='dirty'){S.hkRoom=n;S.hkScreen='start';renderPhone();}          // 미청소만 청소 시작 허용
+      else{toast(n+'호 · '+statusLabel(r.status));}                                        // 판매보류/준비완료 → 잠금(상태 안내)
+      break;}
     case'hk-back':S.hkScreen='list';S.hkRoom=null;renderPhone();break;
     case'clean-start':{const r=room(S.hkRoom);r.status='cleaning';r.startMs=Date.now();r.inProgress=true;S.hkScreen='progress';renderPhone();renderDash();break;}
-    case'clean-done':{const r=room(S.hkRoom);r.status='ready';r.doneMs=Date.now();r.inProgress=false;S.hkScreen='done';
+    case'clean-done':{const r=room(S.hkRoom);r.doneMs=Date.now();r.inProgress=false;settleRoom(S.hkRoom);S.hkScreen='done';
       const wl=S.workLog['hk-kim'];const ex=wl.find(w=>w.room===S.hkRoom);const mins=r.startMs?Math.max(1,Math.round((r.doneMs-r.startMs)/60000)):24;
       if(ex){ex.active=false;ex.mins=mins;}else wl.push({room:S.hkRoom,type:r.type,mins,active:false});
       S.feed.unshift({time:nowHM(),room:S.hkRoom,status:'조치완료',text:'청소 완료'});renderPhone();renderDash();break;}
@@ -1209,7 +1234,7 @@ document.addEventListener('click',(e)=>{
     case'send':sendReport();break;
     case'rm-issue':S.rmIssue=el.dataset.id;S.rmScreen='detail';renderPhone();break;
     case'rm-back':S.rmScreen='inbox';S.rmIssue=null;renderPhone();break;
-    case'rm-resolve':{const iss=S.issues.find(i=>i.id===el.dataset.id);iss.status='resolved';const r=room(iss.room);r.status=r.doneMs?'ready':'cleaning';const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';S.rmScreen='inbox';renderPhone();renderDash();break;}
+    case'rm-resolve':{const iss=S.issues.find(i=>i.id===el.dataset.id);iss.status='resolved';settleRoom(iss.room);const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';S.rmScreen='inbox';renderPhone();renderDash();break;}
     case'lightbox':{const src=el.dataset.src,idx=Number(el.dataset.idx);const photos=src==='input'?S.photos:(S.issues.find(i=>i.id===el.dataset.id)||{}).photos||[];if(!photos.length)break;S.lightbox={src,id:el.dataset.id,idx};window.__lbFocus=el;renderLightbox();break;}
     case'lb-close':S.lightbox=null;renderLightbox();if(window.__lbFocus)try{window.__lbFocus.focus();}catch(e){}break;
     case'lb-prev':{const p=getLbPhotos();S.lightbox.idx=(S.lightbox.idx-1+p.length)%p.length;renderLightbox();break;}
