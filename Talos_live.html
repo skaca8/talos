@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talos LIVE</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--stone-0:#fff;--stone-50:#faf9f7;--stone-100:#f4f2ee;--stone-200:#e8e5df;
+--stone-300:#d8d3ca;--stone-400:#b6afa3;--stone-500:#8c857a;--stone-600:#655f55;
+--stone-700:#47423a;--stone-800:#2c2925;--stone-900:#1a1815;--stone-950:#110f0d;
+--coral-50:#fff4ee;--coral-100:#ffe5d6;--coral-200:#ffc7a9;--coral-300:#ffa377;
+--coral-400:#fb7c47;--coral-500:#f2602e;--coral-600:#db4a1c;--coral-700:#b53a16;--coral-800:#8e2f15;--coral-900:#722917;
+--green-500:#2f9e69;--green-600:#258255;--amber-500:#e5a02b;--amber-600:#c5841a;
+--red-50:#fdecec;--red-500:#d64545;--red-600:#b83636;--blue-500:#3b7fd6;
+--bg:#faf9f7;--bg-subtle:#f4f2ee;--surface:#fff;--surface-2:#faf9f7;--overlay:rgba(26,24,21,.45);
+--fg:#1a1815;--fg-2:#47423a;--fg-3:#8c857a;--fg-on-accent:#fff;
+--border:#e8e5df;--border-strong:#d8d3ca;--border-focus:#f2602e;
+--accent:#f2602e;--accent-hover:#db4a1c;--accent-press:#b53a16;--accent-subtle:#fff4ee;--accent-border:#ffc7a9;--accent-fg:#b53a16;
+--success:#2f9e69;--warning:#e5a02b;--danger:#d64545;--danger-hover:#b83636;--info:#3b7fd6;--link:#db4a1c;
+--font-sans:"Inter","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+--font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+--shadow-xs:0 1px 2px rgba(26,24,21,.05);
+--shadow-sm:0 1px 3px rgba(26,24,21,.07),0 1px 2px rgba(26,24,21,.04);
+--shadow-md:0 4px 10px rgba(26,24,21,.08),0 2px 4px rgba(26,24,21,.05);
+--shadow-xl:0 24px 56px rgba(26,24,21,.14),0 8px 16px rgba(26,24,21,.06);
+--ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-sans);color:var(--fg);background:var(--stone-300);-webkit-font-smoothing:antialiased;word-break:keep-all;line-height:1.5;overflow:hidden}
+.mono{font-family:var(--font-mono)}
+.nw{white-space:nowrap}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:active{transform:scale(.985)}
+svg{display:block}
+
+#stage-root{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--stone-300);overflow:hidden}
+#stage{width:1920px;height:1080px;background:var(--bg);display:flex;flex-direction:column;transform-origin:center center;flex-shrink:0;position:relative;overflow:hidden}
+
+/* GLOBAL BAR */
+.gbar{height:64px;flex-shrink:0;padding:0 32px;display:flex;align-items:center;gap:24px;border-bottom:1px solid var(--border);background:var(--surface)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--stone-900);display:flex;align-items:center;justify-content:center;color:#fff}
+.logo-name{font-weight:700;font-size:18px;letter-spacing:-.01em}
+.seg{display:flex;background:var(--stone-100);border-radius:9999px;padding:4px;gap:2px}
+.seg button{padding:7px 14px;border-radius:9999px;font-size:13px;font-weight:500;color:var(--fg-2);display:flex;align-items:center;gap:6px;transition:all .15s var(--ease)}
+.seg button.on{background:var(--surface);box-shadow:var(--shadow-xs);color:var(--accent-fg);font-weight:600}
+.gbtn{padding:7px 14px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;transition:all .15s var(--ease)}
+.gbtn:hover{background:var(--stone-50)}
+.kbd{font-family:var(--font-mono);font-size:11px;padding:1px 6px;border:1px solid var(--border-strong);border-radius:5px;background:var(--stone-50);color:var(--fg-3)}
+.spacer{flex:1}
+.lang-wrap{position:relative}
+
+.stage-body{flex:1;display:flex;min-height:0}
+
+/* PHONE COL */
+.phone-col{flex:0 0 470px;width:470px;background:var(--bg-subtle);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;align-items:center;transition:all .32s var(--ease);overflow:hidden}
+.phone-col.hidden{flex:0 0 0;width:0;opacity:0;padding:0;border-right:none}
+.phone-cap{font-size:13px;color:var(--fg-3);display:flex;align-items:center;gap:6px;background:var(--surface);padding:5px 14px;border-radius:9999px;border:1px solid var(--border);font-weight:500}
+.phone{width:390px;height:844px;margin-top:40px;background:#000;border-radius:46px;padding:11px;flex-shrink:0;box-shadow:var(--shadow-xl)}
+.phone-screen{width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:20px;z-index:50}
+.role-toggle{flex-shrink:0;padding:44px 16px 10px;display:flex;gap:10px;border-bottom:1px solid var(--border);align-items:center}
+.role-seg{display:flex;gap:6px;background:var(--stone-100);border-radius:10px;padding:4px;flex:1}
+.role-seg button{flex:1;padding:8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--fg-3);display:flex;align-items:center;justify-content:center;gap:5px}
+.role-seg button.on{background:var(--surface);box-shadow:var(--shadow-xs);color:var(--accent-fg)}
+.role-note{font-size:10.5px;color:var(--fg-3);display:flex;align-items:center;gap:3px;white-space:nowrap}
+.phone-body{flex:1;min-height:0;overflow-y:auto}
+
+/* WORK screens */
+.work{display:flex;flex-direction:column;height:100%}
+.work-head{padding:18px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.work-back{font-size:14px;color:var(--fg-3);display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.work-rno{font-size:34px;font-weight:700;letter-spacing:-.02em}
+.work-type{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;background:var(--stone-100);padding:5px 12px;border-radius:6px}
+.work-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px;min-height:0}
+.work-foot{padding:20px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.btn-big{width:100%;padding:18px;border-radius:14px;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-big.pri{background:var(--accent);color:#fff}
+.btn-big.sec{background:var(--surface);color:var(--fg);border:1.5px solid var(--border-strong)}
+.timer{font-family:var(--font-mono);font-size:64px;font-weight:700;letter-spacing:.02em}
+.chip-cleaning{display:inline-flex;align-items:center;gap:6px;background:var(--accent-subtle);color:var(--accent-fg);font-size:13px;font-weight:600;padding:6px 14px;border-radius:9999px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-cleaning{background:var(--accent);animation:pulse 1.4s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.done-check{width:96px;height:96px;border-radius:50%;background:var(--accent-subtle);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+
+/* HK list */
+.hk-list{padding:18px 16px 20px}
+.hk-greet{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.hk-sub{font-size:14px;color:var(--fg-3);margin-top:2px}
+.hk-sub b{color:var(--fg);font-weight:700}
+.hk-label{font-size:12px;color:var(--fg-3);font-weight:600;margin:18px 0 10px;text-transform:none}
+.hk-card{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.hk-card.active{border:1.5px solid var(--accent);box-shadow:0 0 0 3px var(--accent-subtle)}
+.hk-num{width:30px;height:30px;border-radius:50%;background:var(--stone-100);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--fg-2);flex-shrink:0}
+.hk-num.go{background:var(--accent);color:#fff}
+.hk-info{flex:1;min-width:0}
+.hk-rno{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+.hk-meta{font-size:13px;color:var(--fg-3);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hk-timer{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent)}
+.tag-prog{font-size:13px;font-weight:700;color:var(--accent)}
+.tag-soon{font-size:12px;font-weight:600;color:var(--amber-600);background:#fdf3e3;padding:3px 9px;border-radius:9999px;white-space:nowrap}
+.tag-done{font-size:13px;color:var(--green-600);font-weight:600;display:flex;align-items:center;gap:4px}
+
+/* RM */
+.rm{padding:20px 16px}
+.rm-title{font-size:24px;font-weight:700}
+.rm-sub{font-size:14px;color:var(--fg-3);margin-top:2px}
+.rm-sub b{color:var(--accent-fg)}
+.rm-banner{margin:16px 0;background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:12px;padding:13px 14px;font-size:13.5px;font-weight:600;color:var(--accent-fg);display:flex;align-items:center;gap:9px}
+.rm-card{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.rm-card.muted{opacity:.7}
+.rm-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.rm-cinfo{flex:1;min-width:0}
+.rm-crno{font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px}
+.rm-ctxt{font-size:14px;color:var(--fg-2);margin-top:3px}
+.rm-cmeta{font-size:12px;color:var(--fg-3);margin-top:4px}
+.badge-urgent{font-size:11px;font-weight:700;color:var(--red-600);background:var(--red-50);padding:2px 9px;border-radius:9999px}
+.badge-done{font-size:11px;font-weight:600;color:var(--fg-3);background:var(--stone-100);padding:2px 9px;border-radius:9999px;display:inline-flex;align-items:center;gap:4px}
+.rm-detail{padding:20px 16px}
+.ai-box{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--surface-2);margin:14px 0}
+.ai-head{font-size:13px;font-weight:700;color:var(--accent-fg);display:flex;align-items:center;gap:6px;margin-bottom:9px}
+.ai-txt{font-size:15px;color:var(--fg-2);line-height:1.6}
+.kv{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);font-size:14.5px}
+.kv .k{color:var(--fg-3)}
+.kv .v{font-weight:700;text-align:right}
+.photo-ph{margin-top:14px;border:1px dashed var(--border-strong);border-radius:12px;padding:14px;text-align:center;font-size:13px;color:var(--fg-3)}
+
+/* DASH */
+.dash-col{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+.dash{flex:1;display:flex;flex-direction:column;padding:28px 32px;gap:16px;min-height:0}
+.kpi-strip{display:flex;gap:16px;flex-shrink:0}
+.kpi{flex:1;border:1px solid var(--border);border-radius:12px;padding:20px 24px;background:var(--surface)}
+.kpi-label{font-size:14px;color:var(--fg-3);white-space:nowrap}
+.kpi-num{font-size:34px;font-weight:700;margin-top:6px;letter-spacing:-.02em}
+.kpi.urgent .kpi-num{color:var(--red-600)}
+.kpi.urgent{border-color:var(--accent-border)}
+.kpi.hold .kpi-num{color:var(--stone-400)}
+
+.dash-grid{flex:1;display:grid;grid-template-columns:1fr 440px;grid-template-rows:1fr auto;gap:20px;align-items:stretch;min-height:0}
+.matrix-panel{grid-column:1;grid-row:1;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:var(--surface);min-height:0;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:16px;font-weight:700;white-space:nowrap}
+.panel-cap{font-size:13px;color:var(--fg-3);white-space:nowrap}
+.matrix-bar{display:flex;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
+.legend{display:flex;gap:14px;align-items:center}
+.leg{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--fg-2);white-space:nowrap}
+.floor-tabs{display:flex;gap:4px;margin-left:auto;background:var(--stone-100);border-radius:9999px;padding:3px}
+.floor-tabs button{padding:6px 13px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-2);white-space:nowrap}
+.floor-tabs button.on{background:var(--surface);box-shadow:var(--shadow-xs);color:var(--fg)}
+.matrix-grid{flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:1fr;gap:12px;padding:18px 20px 20px}
+.cell{border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;position:relative;background:var(--surface);transition:transform .12s var(--ease),box-shadow .12s var(--ease);cursor:pointer}
+.cell:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.cell .cn{font-family:var(--font-mono);font-size:21px;font-weight:600}
+.cell .cs{font-size:12.5px;font-weight:500}
+.cell .cm{font-size:11.5px;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .cdot{position:absolute;top:14px;right:14px;width:10px;height:10px;border-radius:50%}
+.cell.urgent{background:var(--red-50);border-color:#f1cccc}
+.cell.urgent .cn{color:var(--red-600)}
+.cell.hold{background:var(--stone-100);border-color:var(--stone-200)}
+.cell.hold .cn{color:var(--stone-400)}
+.cell .cicon{position:absolute;top:11px;right:11px;color:var(--red-500)}
+.cell .cicon.gray{color:var(--stone-400)}
+
+.rail{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:16px;min-height:0}
+.panel{border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;min-height:0;background:var(--surface);overflow:hidden}
+.panel.issues{flex:1.3}
+.panel.feed{flex:1}
+.panel-body{flex:1;overflow-y:auto;min-height:0}
+.issue-row{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);cursor:pointer}
+.issue-row:hover{background:var(--stone-50)}
+.ir-rno{font-family:var(--font-mono);font-size:15px;font-weight:600;width:42px;flex-shrink:0}
+.ir-mid{flex:1;min-width:0}
+.ir-txt{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ir-badges{display:flex;gap:6px;margin-top:5px}
+.b-urg{font-size:11px;font-weight:700;color:var(--red-600);background:var(--red-50);padding:2px 8px;border-radius:9999px;white-space:nowrap}
+.b-norm{font-size:11px;font-weight:600;color:var(--fg-2);background:var(--stone-100);padding:2px 8px;border-radius:9999px;white-space:nowrap}
+.b-stat{font-size:11px;font-weight:500;color:var(--fg-3);white-space:nowrap;padding:2px 0}
+.ir-arrow{color:var(--stone-400);flex-shrink:0}
+.feed-cap{font-size:11px;color:var(--fg-3);background:var(--stone-100);padding:3px 9px;border-radius:9999px;margin-left:auto;white-space:nowrap}
+.feed-row{display:flex;gap:11px;padding:13px 18px;position:relative}
+.feed-mark{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.feed-mark .fd{width:9px;height:9px;border-radius:50%;margin-top:4px}
+.feed-mark .fl{flex:1;width:2px;background:var(--border);margin:4px 0 -13px}
+.feed-row:last-child .fl{display:none}
+.feed-body{flex:1;min-width:0}
+.feed-top{display:flex;align-items:center;gap:8px;font-size:14px}
+.feed-top b{font-family:var(--font-mono);font-weight:600}
+.feed-time{margin-left:auto;font-size:12px;color:var(--fg-3);font-family:var(--font-mono)}
+.feed-txt{font-size:13px;color:var(--fg-2);margin-top:3px}
+.feed-to{font-size:12px;color:var(--fg-3);margin-top:2px}
+.chip-fs{font-size:11px;font-weight:600;padding:2px 8px;border-radius:9999px;white-space:nowrap}
+.cf-confirm{color:var(--red-600);background:var(--red-50)}
+.cf-doing{color:var(--amber-600);background:#fdf3e3}
+.cf-done{color:var(--green-600);background:#e7f4ee}
+
+.daily-panel{grid-column:1 / -1;grid-row:2;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.daily-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.daily-total{margin-left:auto;font-size:14px;font-weight:600;white-space:nowrap}
+.daily-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:16px}
+.dcard{border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .12s var(--ease)}
+.dcard:hover{box-shadow:var(--shadow-md)}
+.dc-top{display:flex;align-items:center;gap:9px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--stone-600);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.dc-name{font-size:15px;font-weight:700;display:flex;align-items:center;gap:5px}
+.dc-me{font-size:10px;color:var(--accent-fg);background:var(--accent-subtle);padding:1px 6px;border-radius:5px;font-weight:600}
+.dc-zone{font-size:11.5px;color:var(--fg-3)}
+.dc-stat{font-size:11px;font-weight:600;padding:3px 9px;border-radius:9999px;margin-left:auto;white-space:nowrap}
+.ds-clean{color:var(--accent-fg);background:var(--accent-subtle)}
+.ds-wait{color:var(--fg-3);background:var(--stone-100)}
+.dc-row{display:flex;gap:14px;margin-top:14px}
+.dc-met{display:flex;flex-direction:column}
+.dc-met .mv{font-size:19px;font-weight:700;font-family:var(--font-mono)}
+.dc-met .ml{font-size:11px;color:var(--fg-3);white-space:nowrap;margin-top:2px}
+.dc-bar{height:5px;background:var(--stone-100);border-radius:9999px;margin-top:14px;overflow:hidden}
+.dc-bar i{display:block;height:100%;background:var(--accent);border-radius:9999px}
+
+/* SLIDE PANEL */
+.panel-scrim{position:absolute;inset:0;z-index:80;background:rgba(26,24,21,.12);opacity:0;pointer-events:none;transition:opacity .32s var(--ease)}
+.panel-scrim.on{opacity:1;pointer-events:auto}
+.slide-panel{position:absolute;top:0;right:0;bottom:0;width:440px;z-index:81;background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--shadow-xl);transform:translateX(100%);transition:transform .32s var(--ease);display:flex;flex-direction:column}
+.slide-panel.on{transform:translateX(0)}
+.sp-head{padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:flex-start;gap:12px}
+.sp-htext{flex:1;min-width:0}
+.sp-eyebrow{font-size:12px;color:var(--fg-3);margin-bottom:6px}
+.sp-title{font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px}
+.sp-title .mono{font-family:var(--font-mono)}
+.sp-subtitle{font-size:13.5px;color:var(--fg-3);margin-top:6px}
+.sp-close{width:34px;height:34px;border-radius:9999px;background:var(--stone-100);display:flex;align-items:center;justify-content:center;color:var(--fg-2);flex-shrink:0}
+.sp-body{flex:1;overflow-y:auto;padding:20px 24px;min-height:0}
+.sp-foot{padding:16px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px}
+.sp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 0 22px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.sp-kpi .v{font-size:24px;font-weight:700;font-family:var(--font-mono)}
+.sp-kpi .l{font-size:11.5px;color:var(--fg-3);margin-top:3px;white-space:nowrap}
+.sec-label{font-size:13px;font-weight:600;color:var(--fg-3);margin-bottom:14px}
+/* staff timeline */
+.tl-room{margin-bottom:16px}
+.tl-room-top{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:6px}
+.tl-chip{font-size:11px;font-weight:600;color:var(--fg-2);background:var(--stone-100);padding:1px 7px;border-radius:6px;font-family:var(--font-mono)}
+.tl-bar-track{height:22px;background:var(--bg-subtle);border-radius:6px;position:relative;overflow:hidden}
+.tl-bar{position:absolute;top:0;bottom:0;border-radius:6px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden}
+.tl-done{background:var(--stone-400);color:#fff}
+.tl-prog{background:var(--accent);color:#fff}
+.tl-over{background:var(--accent);color:#fff}
+/* room detail timeline */
+.rtl{position:relative;padding-left:4px}
+.rtl-row{display:flex;gap:13px;position:relative;padding-bottom:18px}
+.rtl-row:last-child{padding-bottom:0}
+.rtl-mark{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.rtl-dot{width:11px;height:11px;border-radius:50%;margin-top:3px;z-index:1}
+.rtl-line{flex:1;width:2px;background:var(--border);margin:3px 0 -18px}
+.rtl-row:last-child .rtl-line{display:none}
+.rtl-body .t{font-family:var(--font-mono);font-size:14px;font-weight:600}
+.rtl-body .l{font-size:13px;color:var(--fg-2);margin-top:2px}
+.rtl-body.dim{opacity:.45}
+.kv2{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}
+.kv2 .k{color:var(--fg-3)}.kv2 .v{font-weight:600}
+.remark{font-size:14px;color:var(--fg-2);padding:10px 0}
+/* issue detail */
+.issummary{font-size:14.5px;color:var(--fg-2);line-height:1.6;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.raw{padding:11px 0}
+.raw + .raw{border-top:1px dashed var(--border-strong)}
+.raw-time{font-family:var(--font-mono);font-size:12px;color:var(--fg-3);margin-bottom:4px}
+.raw-txt{font-size:14px;color:var(--fg-2);line-height:1.55}
+.photos{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 6px}
+.thumb{width:84px;height:84px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid var(--border);position:relative}
+.thumb-wrap{position:relative;cursor:pointer}
+.thumb-wrap .zoom{position:absolute;right:5px;bottom:5px;background:rgba(26,24,21,.6);color:#fff;border-radius:6px;padding:2px;display:flex}
+.ai-read{font-size:13px;color:var(--fg-2);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;line-height:1.5}
+.tg-btn{flex:1;padding:14px;border-radius:10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s var(--ease)}
+.tg-on{background:var(--accent);color:#fff}
+.tg-off{background:var(--stone-100);color:var(--stone-400);cursor:not-allowed}
+
+/* BOTTOM SHEET */
+.sheet-scrim{position:absolute;inset:0;z-index:40;background:rgba(26,24,21,.4);opacity:0;pointer-events:none;transition:opacity .28s var(--ease)}
+.sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .32s var(--ease);display:flex;flex-direction:column;max-height:85%}
+.sheet.on{transform:translateY(0)}
+.grab{width:38px;height:4px;background:var(--stone-300);border-radius:9999px;margin:10px auto 0;flex-shrink:0}
+.sheet-head{padding:14px 24px 6px;text-align:center;flex-shrink:0}
+.sheet-title{font-size:21px;font-weight:700}
+.sheet-cur{font-size:13.5px;color:var(--fg-3);margin-top:5px}
+.sheet-cur b{color:var(--accent)}
+.sheet-body{flex:1;overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:22px;align-items:center;min-height:0}
+.sheet-foot{flex-shrink:0;padding:16px 24px;border-top:1px solid var(--border)}
+.mic-btn{width:88px;height:88px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;position:relative;transition:background .2s var(--ease)}
+.mic-btn.rec{background:var(--danger)}
+.mic-btn.rec::before{content:"";position:absolute;inset:-8px;border-radius:50%;border:3px solid var(--danger);opacity:.4;animation:ring 1.4s var(--ease) infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.25);opacity:0}}
+.mic-btn.disabled{background:var(--stone-300);cursor:not-allowed}
+.wave{display:flex;gap:4px;align-items:center;height:18px}
+.wave i{width:3px;background:var(--accent);border-radius:9999px;height:6px}
+.wave.rec i{background:var(--danger);animation:wv .7s ease-in-out infinite}
+.wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}.wave i:nth-child(5){animation-delay:.15s}.wave i:nth-child(6){animation-delay:.25s}.wave i:nth-child(7){animation-delay:.05s}
+@keyframes wv{0%,100%{height:6px}50%{height:18px}}
+.sheet-hint{font-size:14px;color:var(--fg-3);text-align:center}
+.transcript{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.transcript-h{font-size:12px;font-weight:600;color:var(--accent-fg);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.transcript-t{font-size:15px;color:var(--fg);line-height:1.6;min-height:24px}
+.cursor-blink{display:inline-block;width:2px;height:18px;background:var(--accent);vertical-align:middle;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.sheet-thumbs{display:flex;gap:10px;flex-wrap:wrap;width:100%}
+.sheet-thumb{position:relative}
+.sheet-thumb img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer}
+.sheet-thumb .rm-x{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--stone-900);color:#fff;display:flex;align-items:center;justify-content:center}
+.sheet-act{display:flex;gap:18px;align-items:center}
+.sheet-link{font-size:14px;font-weight:600;color:var(--fg-2);display:flex;align-items:center;gap:7px}
+.sheet-link.on{color:var(--accent)}
+.sheet-link.disabled{color:var(--stone-400);cursor:not-allowed}
+.send-btn{width:100%;padding:16px;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px}
+.send-btn:disabled{background:var(--stone-300);cursor:not-allowed}
+.stt-alert{width:100%;background:var(--red-50);border:1px solid #f1cccc;border-radius:10px;padding:11px 13px;font-size:13px;color:var(--red-600);display:flex;gap:8px;align-items:flex-start}
+
+/* TOAST / PUSH */
+.toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);z-index:200;background:var(--stone-900);color:#fff;padding:12px 20px;border-radius:9999px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:all .25s var(--ease);box-shadow:var(--shadow-xl);max-width:80%}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .tk{color:var(--accent)}
+.push{position:absolute;top:24px;left:50%;transform:translateX(-50%) translateY(-12px);z-index:210;background:var(--stone-900);color:#fff;padding:13px 18px;border-radius:14px;display:flex;gap:11px;align-items:center;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow-xl);min-width:300px}
+.push.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.push-icon{color:var(--accent);flex-shrink:0}
+.push-title{font-size:14px;font-weight:700}
+.push-sub{font-size:12.5px;color:rgba(255,255,255,.7);margin-top:2px}
+
+/* LANG COACH */
+.lang-coach{position:absolute;top:60px;right:80px;z-index:90;background:var(--stone-900);color:#fff;border-radius:14px;padding:16px;width:240px;box-shadow:var(--shadow-xl);opacity:0;pointer-events:none;transform:translateY(-6px);transition:all .25s var(--ease)}
+.lang-coach.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.lang-coach::before{content:"";position:absolute;top:-7px;right:36px;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid var(--stone-900)}
+.lc-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+.lc-title::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.lc-body{font-size:13px;color:rgba(255,255,255,.78);margin:8px 0 12px;line-height:1.5}
+.lc-ok{background:var(--accent);color:#fff;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600}
+
+/* LIGHTBOX */
+.lightbox{position:absolute;inset:0;z-index:300;background:rgba(17,15,13,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s var(--ease);padding:40px}
+.lightbox.on{opacity:1;pointer-events:auto}
+.lb-img{max-width:90%;max-height:70%;border-radius:10px;object-fit:contain;box-shadow:var(--shadow-xl)}
+.lb-read{max-width:560px;color:#fff;background:rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;font-size:14px;margin-top:18px;text-align:center;line-height:1.5}
+.lb-close{position:absolute;top:24px;right:24px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center}
+.lb-prev{left:24px}.lb-next{right:24px}
+.lb-idx{position:absolute;bottom:28px;color:#fff;font-size:14px;font-family:var(--font-mono)}
+.lb-newtab{position:absolute;top:24px;left:24px;color:#fff;font-size:13px;background:rgba(255,255,255,.14);padding:8px 14px;border-radius:9999px;display:flex;align-items:center;gap:6px;text-decoration:none}
+.lb-broken{color:rgba(255,255,255,.6);font-size:15px}
+
+/* CONCEPT */
+.concept{flex:1;overflow-y:auto;background:var(--bg-subtle)}
+.concept-canvas{padding:48px 56px 20px;position:relative}
+.cgroup-label{font-size:12px;color:var(--fg-3);font-weight:600;margin-bottom:14px}
+.cnodes{display:flex;gap:40px;align-items:flex-start}
+.cgroup{display:flex;flex-direction:column;gap:14px;flex:1}
+.cnode{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:16px;transition:all .3s var(--ease);opacity:.45}
+.cnode.active{opacity:1;border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-subtle)}
+.cn-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--fg-3);margin-bottom:8px}
+.cn-tag{font-size:10px;background:var(--stone-100);padding:2px 7px;border-radius:5px}
+.cn-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.cn-data{font-size:13px;color:var(--fg-2);margin-top:8px}
+.player{margin:8px 56px 56px;display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:16px;background:var(--surface);overflow:hidden;cursor:pointer}
+.player-half{padding:28px 32px}
+.player-half + .player-half{border-left:1px solid var(--border)}
+.ph-eyebrow{font-size:13px;font-weight:700;color:var(--accent-fg);margin-bottom:10px}
+.ph-eyebrow.gray{color:var(--fg-3)}
+.ph-text{font-size:18px;font-weight:600;line-height:1.5}
+.dots{display:flex;gap:7px;justify-content:center;padding-bottom:36px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--stone-300);cursor:pointer;transition:all .2s}
+.dots i.on{background:var(--accent);width:22px;border-radius:9999px}
+.concept-hero{text-align:center;padding:80px 20px}
+.concept-hero .eb{font-size:14px;font-weight:700;color:var(--accent-fg);letter-spacing:.05em}
+.concept-hero h1{font-size:48px;font-weight:800;line-height:1.25;margin:16px 0 22px;letter-spacing:-.02em}
+.concept-hero .start{font-size:14px;color:var(--fg-3)}
+.concept-hero .start .kbd{margin:0 4px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:9999px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div id="stage-root">
+  <div id="stage">
+    <div class="gbar" id="gbar"></div>
+    <div class="stage-body">
+      <div class="phone-col hidden" id="phoneCol"></div>
+      <div class="dash-col" id="dashCol"></div>
+    </div>
+    <div class="panel-scrim" id="scrim"></div>
+    <div class="slide-panel" id="slide"></div>
+    <div class="lang-coach" id="langCoach"></div>
+    <div class="lightbox" id="lightbox"></div>
+    <div class="toast" id="pcToast"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============== ICONS (inline svg, no deps) ============== */
+const IC={
+  grid:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  flow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg>',
+  phone:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg>',
+  logo:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="#f2602e" stroke="none"/></svg>',
+  alert:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  ban:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.5 5.5 13 13"/></svg>',
+  mic:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>',
+  micS:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>',
+  stop:'<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  send:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+  cam:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+  kb:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>',
+  check:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>',
+  checkBig:'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>',
+  x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  xs:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  cr:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>',
+  cl:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>',
+  play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 4 20 12 6 20 6 4"/></svg>',
+  bell:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  bellRing:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2a8 8 0 0 0-1.5 3M21.5 5A8 8 0 0 0 20 2"/></svg>',
+  zoom:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>',
+  ext:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  shield:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  hk:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v6M6 8c-2 0-2 4 0 4M6 12v8M6 8h3l1 4H6"/></svg>',
+  swap:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H7M7 21l-4-4 4-4M3 17h14"/></svg>',
+  ai:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="5"/></svg>',
+  img:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
+};
+
+/* ============== DATA MODEL (§7 LIVE) ============== */
+const POOL=["C1","C1","C2","C5","C1","C3","C4"];
+const TYPE={C1:{label:'표준',sla:40},C2:{label:'빠른정비',sla:25},C3:{label:'스위트',sla:75},C4:{label:'장기투숙',sla:50},C5:{label:'디럭스',sla:55},C6:{label:'심층청소',sla:90},C7:{label:'점검정비',sla:30}};
+function planType(id){const s=String(id);let sum=0;for(let i=0;i<s.length;i++)sum+=s.charCodeAt(i);return POOL[sum%7];}
+const FLOORS=[3,5,7,8,9,10];
+function roomsOf(f){const a=[];for(let i=1;i<=24;i++)a.push(f===10?1000+i:f*100+i);return a;}
+
+const PLAN={
+ 'hk-kim':{done:[1002,1004,1006],cur:1001,todo:[1008,1012]},
+ 'hk-park':{done:[703,705,708,801,803,806,810],cur:815,todo:[818,822]},
+ 'hk-lee':{done:[502,504,507,509,512,515,518],cur:null,todo:[521]},
+ 'hk-jung':{done:[902,904,906,909,911],cur:907,todo:[914,918]},
+ 'hk-choi':{done:[302,304,306,308,311,314,317,320],cur:null,todo:[322]},
+};
+const STAFF=[
+ {id:'hk-kim',name:'Marcus',me:true,zone:'10F',seedA:6},
+ {id:'hk-park',name:'Kevin',zone:'7–8F',seedA:10},
+ {id:'hk-lee',name:'Sara',tag:'당직',zone:'5F',seedA:8},
+ {id:'hk-jung',name:'David',zone:'9F',seedA:8},
+ {id:'hk-choi',name:'Emma',zone:'3F',seedA:9},
+];
+const MINS={
+ 'hk-kim':{1002:22,1004:24,1006:26},
+ 'hk-park':{703:26,705:30,708:28,801:27,803:25,806:24,810:29},
+ 'hk-lee':{502:30,504:31,507:32,509:29,512:30,515:29,518:29},
+ 'hk-jung':{902:24,904:26,906:25,909:24,911:26},
+ 'hk-choi':{302:22,304:23,306:21,308:22,311:23,314:21,317:22,320:22},
+};
+
+function buildBoard(){
+  const rooms=[],assign={};const now=Date.now();
+  for(const sid in PLAN){const p=PLAN[sid];
+    p.done.forEach(r=>assign[r]={sid,k:'done'});
+    if(p.cur)assign[p.cur]={sid,k:'cur'};
+    p.todo.forEach(r=>assign[r]={sid,k:'todo'});}
+  const startMap={1001:now-21*60000,815:now-18*60000,907:now-12*60000};
+  for(const f of FLOORS)for(const n of roomsOf(f)){
+    let status='ready',assignee=null,inProgress=false,startMs=null,checkin=null,doneMs=null;
+    const type=planType(n),a=assign[n];
+    if(n===1003){status='hold';assignee='hk-kim';}
+    else if(n===820){status='hold';assignee='hk-park';}
+    else if(a){assignee=a.sid;
+      if(a.k==='done'){status='ready';doneMs=now-30*60000;}
+      else if(a.k==='cur'){status='cleaning';inProgress=true;startMs=startMap[n]||now-15*60000;}
+      else if(a.k==='todo'){status='dirty';}}
+    if(n===1008){status='dirty';checkin='14:00';}
+    rooms.push({id:n,floor:f,n,status,type,assignee,inProgress,startMs,checkin,doneMs});
+  }
+  return rooms;
+}
+function buildIssues(){return[
+ {id:'is-1003',room:1003,short:'욕실 타일 균열',summary:'욕실 타일 균열, 누수 위험. 누수·안전 위험으로 분류되어 즉시 판매 보류 처리되었습니다. 시설팀 점검이 필요합니다.',raws:[{time:'12:34',text:'어, 1003호 욕실 바닥 타일에 금이 가 있고요... 물이 살짝 새는 것 같아요. 미끄러질 위험이 있어서 빨리 봐주셔야 할 것 같습니다.'}],photos:[],urgency:'urgent',status:'open',reporter:'Marcus',time:'12:34',kind:'시설'},
+ {id:'is-820',room:820,short:'에어컨 누수',summary:'에어컨에서 물이 떨어짐. 누수 위험으로 분류되어 판매 보류 처리되었습니다. 시설팀 점검이 필요합니다.',raws:[{time:'11:48',text:'820호 에어컨 밑으로 물이 뚝뚝 떨어지고 있어요. 바닥에 물이 고였습니다.'}],photos:[],urgency:'urgent',status:'open',reporter:'Kevin',time:'11:48',kind:'시설'},
+ {id:'is-914',room:914,short:'냉장고 미작동',summary:'냉장고가 작동하지 않습니다. 시설 점검이 필요합니다.',raws:[{time:'12:05',text:'914호 냉장고가 안 돌아가요. 콘센트는 꽂혀 있는데 전원이 안 들어옵니다.'}],photos:[],urgency:'urgent',status:'review',reporter:'David',time:'12:05',kind:'시설'},
+ {id:'is-705',room:705,short:'어메니티 부족',summary:'수건·어메니티가 부족합니다. 소모품 보충이 필요합니다.',raws:[{time:'11:30',text:'705호 수건이랑 어메니티가 모자랍니다. 보충 부탁드려요.'}],photos:[],urgency:'normal',status:'open',reporter:'Kevin',time:'11:30',kind:'소모품'},
+ {id:'is-514',room:514,short:'전등 깜빡임',summary:'전등 깜빡임이 보고되어 시설팀 조치가 완료되었습니다.',raws:[{time:'10:12',text:'514호 천장 전등이 계속 깜빡거립니다.'}],photos:[],urgency:'urgent',status:'resolved',reporter:'Sara',time:'10:12',kind:'시설'},
+ {id:'is-322',room:322,short:'미니바 보충',summary:'미니바 보충이 필요합니다.',raws:[{time:'11:20',text:'322호 미니바 음료가 거의 다 비었어요. 채워주세요.'}],photos:[],urgency:'normal',status:'open',reporter:'Emma',time:'11:20',kind:'소모품'},
+];}
+function buildFeed(){return[
+ {time:'12:34',room:1003,status:'확인',text:'욕실 타일 균열, 누수 위험'},
+ {time:'11:48',room:820,status:'조치중',text:'에어컨에서 물이 떨어짐'},
+ {time:'12:05',room:914,status:'조치중',text:'냉장고 미작동'},
+ {time:'10:12',room:514,status:'조치완료',text:'전등 깜빡임'},
+];}
+
+/* workLog: active first then done; mins from MINS; active mins computed live */
+function buildWorkLog(rooms){
+  const wl={};
+  for(const s of STAFF){
+    const p=PLAN[s.id],list=[];
+    if(p.cur){const r=rooms.find(x=>x.n===p.cur);list.push({room:p.cur,type:planType(p.cur),active:true,startMs:r?r.startMs:null});}
+    p.done.forEach(rm=>list.push({room:rm,type:planType(rm),mins:MINS[s.id][rm],active:false}));
+    wl[s.id]=list;
+  }
+  return wl;
+}
+
+/* ============== STATE ============== */
+const S={
+  lang:'kr',showPhone:false,view:'control',matrixFloor:10,
+  rooms:[],issues:[],feed:[],workLog:{},
+  slide:null, // {type, id}
+  issueToggle:{}, // issueId -> 'resolved'|'recheck'  (true state when user toggled)
+  phoneRole:'hk',hkScreen:'list',hkRoom:null,rmScreen:'inbox',rmIssue:null,
+  sheetOpen:false,transcript:'',interim:'',photos:[],recState:'idle',sttErr:'',
+  lightbox:null,langCoachSeen:false,conceptStep:0,
+};
+S.rooms=buildBoard();S.issues=buildIssues();S.feed=buildFeed();S.workLog=buildWorkLog(S.rooms);
+
+/* ============== HELPERS ============== */
+const $=id=>document.getElementById(id);
+function fmtTimer(ms){const t=Math.max(0,Math.floor((Date.now()-ms)/1000));const m=String(Math.floor(t/60)).padStart(2,'0');const s=String(t%60).padStart(2,'0');return m+':'+s;}
+function elapsedMin(ms){return Math.max(1,Math.round((Date.now()-ms)/60000));}
+function room(n){return S.rooms.find(r=>r.n===Number(n));}
+function statusLabel(st){return{ready:'준비완료',cleaning:'청소중',dirty:'미청소',hold:'판매보류',ooo:'OOO'}[st];}
+function statusDot(st){return{ready:'#2f9e69',cleaning:'#f2602e',dirty:'#e5a02b',hold:'#b6afa3',ooo:'#b6afa3'}[st];}
+function staffName(id){const s=STAFF.find(x=>x.id===id);return s?s.name:'';}
+function kpiCounts(){
+  let ready=0,cleaning=0,dirty=0,hold=0;
+  for(const r of S.rooms){if(r.status==='ready')ready++;else if(r.status==='cleaning')cleaning++;else if(r.status==='dirty')dirty++;else if(r.status==='hold')hold++;}
+  const urgent=S.issues.filter(i=>i.urgency==='urgent'&&(i.status==='open'||i.status==='review')).length;
+  return{ready,cleaning,dirty,hold,urgent};
+}
+function staffStats(id){
+  const wl=S.workLog[id]||[],seed=STAFF.find(s=>s.id===id).seedA;
+  const done=wl.filter(w=>!w.active),inprog=wl.filter(w=>w.active);
+  const doneN=done.length,assigned=Math.max(seed,doneN+inprog.length);
+  const avg=doneN?Math.round(done.reduce((a,w)=>a+w.mins,0)/doneN):0;
+  const within=done.filter(w=>w.mins<=TYPE[w.type].sla).length;
+  const sla=doneN?Math.round(within/doneN*100):0;
+  const issueN=S.issues.filter(i=>i.reporter===staffName(id)&&i.status!=='resolved').length;
+  const cur=inprog.length?inprog[0].room:'—';
+  return{doneN,assigned,avg,sla,issueN,cur,cleaning:inprog.length>0};
+}
+function issueOf(roomN){return S.issues.find(i=>i.room===Number(roomN)&&i.status!=='resolved');}
+/* effective toggle state for issue detail buttons; default open/review=active resolve, resolved=recheck */
+function toggleState(iss){
+  if(S.issueToggle[iss.id])return S.issueToggle[iss.id]; // user-set
+  return iss.status==='resolved'?'resolved':'open'; // open => resolve active
+}
+
+/* ============== RENDER: GLOBAL BAR ============== */
+function renderGbar(){
+  const phoneLabel=S.showPhone?'폰 숨김':'폰 표시';
+  $('gbar').innerHTML=`
+    <div class="logo"><div class="logo-mark">${IC.logo}</div><div class="logo-name">Talos</div></div>
+    <div class="seg">
+      <button data-act="view" data-view="control" class="${S.view==='control'?'on':''}">${IC.grid}관제</button>
+      <button data-act="view" data-view="concept" class="${S.view==='concept'?'on':''}">${IC.flow}개념 패널</button>
+    </div>
+    <button class="gbtn" data-act="toggle-phone">${IC.phone}<span class="nw">${phoneLabel}</span><span class="kbd">F</span></button>
+    <div class="spacer"></div>
+    <div class="lang-wrap">
+      <div class="seg">
+        <button data-act="lang" data-lang="kr" class="${S.lang==='kr'?'on':''}">KR</button>
+        <button data-act="lang" data-lang="en" class="${S.lang==='en'?'on':''}">EN</button>
+      </div>
+    </div>`;
+}
+
+/* ============== RENDER: DASHBOARD ============== */
+function renderDash(){
+  if(S.view==='concept'){$('dashCol').innerHTML=renderConcept();return;}
+  const k=kpiCounts();
+  $('dashCol').innerHTML=`
+  <div class="dash">
+    <div class="kpi-strip">
+      ${kpiCard('준비완료',k.ready)}
+      ${kpiCard('청소중',k.cleaning)}
+      ${kpiCard('미청소',k.dirty)}
+      ${kpiCard('판매보류',k.hold,'hold')}
+      ${kpiCard('긴급',k.urgent,'urgent')}
+    </div>
+    <div class="dash-grid">
+      ${renderMatrix()}
+      <div class="rail">
+        ${renderIssues()}
+        ${renderFeed()}
+      </div>
+      ${renderDaily(k)}
+    </div>
+  </div>`;
+}
+function kpiCard(label,val,cls){return`<div class="kpi ${cls||''}"><div class="kpi-label">${label}</div><div class="kpi-num">${val}</div></div>`;}
+
+function renderMatrix(){
+  const cells=roomsOf(S.matrixFloor).map(n=>{
+    const r=room(n),iss=issueOf(n),urgent=iss&&iss.urgency==='urgent';
+    let cls='cell',note='',icon='';
+    const showHold=r.status==='hold';
+    if(showHold){cls+=' hold';icon=`<span class="cicon gray">${IC.ban}</span>`;note=iss?iss.short:'판매보류';}
+    else if(urgent){cls+=' urgent';icon=`<span class="cicon">${IC.alert}</span>`;note=iss.short;}
+    else if(r.checkin&&r.status==='dirty'){note=r.checkin+' 체크인';}
+    else if(r.status==='cleaning'){note=(staffName(r.assignee)||'담당자')+' · 진행 중';}
+    let sCol='var(--fg-2)';if(r.status==='dirty')sCol='var(--amber-600)';if(r.status==='cleaning')sCol='var(--accent-fg)';
+    const dot=showHold||urgent?'':`<span class="cdot" style="background:${statusDot(r.status)}${r.status==='cleaning'?';animation:pulse 1.4s var(--ease) infinite':''}"></span>`;
+    return`<div class="${cls}" data-act="cell" data-room="${n}">
+      <span class="cn">${n}</span>
+      <span class="cs" style="color:${sCol}">${statusLabel(r.status)}</span>
+      ${note?`<span class="cm">${note}</span>`:''}
+      ${dot}${icon}</div>`;
+  }).join('');
+  const tabs=FLOORS.map(f=>`<button data-act="floor" data-floor="${f}" class="${S.matrixFloor===f?'on':''}">${f}F</button>`).join('');
+  return`<div class="matrix-panel">
+    <div class="panel-head"><span class="panel-title">객실 매트릭스</span><span class="panel-cap">${S.matrixFloor}F · 24실</span></div>
+    <div class="matrix-bar">
+      <div class="legend">
+        <span class="leg"><span class="dot" style="background:#2f9e69"></span>준비완료</span>
+        <span class="leg"><span class="dot" style="background:#e5a02b"></span>미청소</span>
+        <span class="leg"><span class="dot" style="background:#f2602e"></span>청소중</span>
+        <span class="leg"><span class="dot" style="background:#d64545"></span>긴급</span>
+        <span class="leg"><span class="dot" style="background:#b6afa3"></span>판매보류</span>
+      </div>
+      <div class="floor-tabs">${tabs}</div>
+    </div>
+    <div class="matrix-grid">${cells}</div>
+  </div>`;
+}
+function renderIssues(){
+  const stTxt={open:'미조치',review:'AI 검토',resolved:'조치완료'};
+  const rows=S.issues.map(i=>`<div class="issue-row" data-act="issue" data-id="${i.id}">
+    <span class="ir-rno">${i.room}</span>
+    <div class="ir-mid"><div class="ir-txt">${i.short==='욕실 타일 균열'?'욕실 타일 균열, 누수 위험':i.summary.split('.')[0]}</div>
+      <div class="ir-badges">${i.urgency==='urgent'?'<span class="b-urg">긴급</span>':'<span class="b-norm">일반</span>'}<span class="b-stat">${stTxt[i.status]}</span></div></div>
+    <span class="ir-arrow">${IC.cr}</span></div>`).join('');
+  return`<div class="panel issues">
+    <div class="panel-head"><span class="panel-title">이슈 리스트</span><span class="panel-cap">현장 발화로 수집된 객실 이슈</span></div>
+    <div class="panel-body">${rows}</div></div>`;
+}
+function renderFeed(){
+  const chip={확인:'cf-confirm',조치중:'cf-doing',조치완료:'cf-done'};
+  const rows=S.feed.map(f=>{
+    const done=f.status==='조치완료';
+    return`<div class="feed-row">
+      <div class="feed-mark"><span class="fd" style="background:${done?'#b6afa3':'#d64545'}"></span><span class="fl"></span></div>
+      <div class="feed-body">
+        <div class="feed-top"><b>${f.room}호</b><span class="chip-fs ${chip[f.status]}">${f.status}</span><span class="feed-time">${f.time}</span></div>
+        <div class="feed-txt">${f.text}</div>
+        <div class="feed-to">→ 시설팀 Owen</div></div></div>`;
+  }).join('');
+  return`<div class="panel feed">
+    <div class="panel-head"><span class="panel-title">긴급 피드</span><span class="panel-cap">디스패처 → 객실관리자 발송 이력</span><span class="feed-cap">보기 전용</span></div>
+    <div class="panel-body">${rows}</div></div>`;
+}
+function renderDaily(k){
+  let dTot=0,aTot=0;
+  const cards=STAFF.map(s=>{
+    const st=staffStats(s.id);dTot+=st.doneN;aTot+=st.assigned;
+    const init=s.name[0];
+    return`<div class="dcard" data-act="staff" data-id="${s.id}">
+      <div class="dc-top"><div class="avatar">${init}</div>
+        <div><div class="dc-name">${s.name}${s.me?'<span class="dc-me">나</span>':''}</div>
+          <div class="dc-zone nw">${s.tag?s.tag+' · ':''}${s.zone}</div></div>
+        <span class="dc-stat ${st.cleaning?'ds-clean':'ds-wait'} nw">${st.cleaning?'● 청소중':'● 대기'}</span></div>
+      <div class="dc-row">
+        <div class="dc-met"><span class="mv">${st.doneN}/${st.assigned}</span><span class="ml">완료/배정</span></div>
+        <div class="dc-met"><span class="mv">${st.avg}분</span><span class="ml">평균소요</span></div>
+        <div class="dc-met"><span class="mv">${st.cur}</span><span class="ml">현재</span></div>
+        <div class="dc-met"><span class="mv">${st.sla}%</span><span class="ml">SLA</span></div></div>
+      <div class="dc-bar"><i style="width:${Math.round(st.doneN/st.assigned*100)}%"></i></div></div>`;
+  }).join('');
+  return`<div class="daily-panel">
+    <div class="daily-head"><span class="panel-title">데일리 현황</span><span class="panel-cap">하우스키핑 5명 · 클릭 시 담당자 상세</span><span class="daily-total nw">완료 ${dTot} / 배정 ${aTot}</span></div>
+    <div class="daily-cards">${cards}</div></div>`;
+}
+
+/* ============== RENDER: SLIDE PANEL ============== */
+function renderSlide(){
+  const sc=$('scrim'),sl=$('slide');
+  if(!S.slide){sc.classList.remove('on');sl.classList.remove('on');return;}
+  sc.classList.add('on');sl.classList.add('on');
+  if(S.slide.type==='staff')sl.innerHTML=slideStaff(S.slide.id);
+  else if(S.slide.type==='room')sl.innerHTML=slideRoom(S.slide.id);
+  else if(S.slide.type==='issue')sl.innerHTML=slideIssue(S.slide.id);
+}
+function slideStaff(id){
+  const s=STAFF.find(x=>x.id===id),st=staffStats(id),wl=S.workLog[id]||[];
+  const items=wl.map(w=>({...w,mins:w.active?elapsedMin(w.startMs||Date.now()):w.mins}));
+  const total=items.reduce((a,w)=>a+w.mins,0)||1;
+  let acc=0;
+  const tracks=items.map(w=>{
+    const left=acc/total*100,width=w.mins/total*100;acc+=w.mins;
+    const over=!w.active&&w.mins>TYPE[w.type].sla;
+    const cls=w.active?'tl-prog':(over?'tl-over':'tl-done');
+    const label=w.active?'진행중':w.mins+'분';
+    return`<div class="tl-room">
+      <div class="tl-room-top">${w.room}호<span class="tl-chip">${w.type}</span></div>
+      <div class="tl-bar-track"><div class="tl-bar ${cls}" style="left:${left}%;width:${width}%">${label}</div></div></div>`;
+  }).join('');
+  return`
+  <div class="sp-head"><div class="sp-htext"><div class="sp-eyebrow">담당자 상세</div>
+    <div class="sp-title"><span class="avatar" style="width:30px;height:30px;font-size:13px">${s.name[0]}</span>${s.name}${s.me?'<span class="dc-me">나</span>':''}</div></div>
+    <button class="sp-close" data-act="slide-close">${IC.x}</button></div>
+  <div class="sp-body">
+    <div class="sp-kpis">
+      <div class="sp-kpi"><div class="v">${st.doneN}실</div><div class="l">완료</div></div>
+      <div class="sp-kpi"><div class="v">${st.avg}분</div><div class="l">평균 소요</div></div>
+      <div class="sp-kpi"><div class="v">${st.issueN}건</div><div class="l">이슈</div></div>
+      <div class="sp-kpi"><div class="v">${st.sla}%</div><div class="l">SLA 준수</div></div></div>
+    <div class="sec-label">오늘 처리 객실 타임라인</div>
+    ${tracks}
+  </div>`;
+}
+function slideRoom(n){
+  const r=room(n),iss=issueOf(n),t=TYPE[r.type];
+  const cleaning=r.status==='cleaning';
+  const startT=cleaning?'15:00':'—';
+  const doneT=r.doneMs?'16:00':(cleaning?'진행 중':'—');
+  const rows=[
+    {t:'11:00',l:'체크아웃',dot:'#d64545'},
+    {t:startT,l:'청소 시작',dot:cleaning?'#f2602e':'#d8d3ca'},
+    {t:doneT,l:'청소 완료',dot:r.doneMs?'#2f9e69':'#d8d3ca',dim:!r.doneMs&&!cleaning},
+    {t:'18:00',l:'다음 체크인 예정',dot:'#655f55'},
+  ].map((x,i)=>`<div class="rtl-row"><div class="rtl-mark"><span class="rtl-dot" style="background:${x.dot}"></span><span class="rtl-line"></span></div>
+    <div class="rtl-body ${x.dim?'dim':''}"><div class="t">${x.t}</div><div class="l">${x.l}</div></div></div>`).join('');
+  return`
+  <div class="sp-head"><div class="sp-htext"><div class="sp-eyebrow">객실 상세</div>
+    <div class="sp-title"><span class="mono">${n}호</span>
+      <span class="chip-fs" style="background:${r.status==='cleaning'?'var(--accent-subtle)':'var(--stone-100)'};color:${r.status==='cleaning'?'var(--accent-fg)':'var(--fg-2)'}">● ${statusLabel(r.status)}</span></div>
+    <div class="sp-subtitle">담당 ${staffName(r.assignee)||'미배정'} · ${r.type} ${t.label} · ${t.sla}분</div></div>
+    <button class="sp-close" data-act="slide-close">${IC.x}</button></div>
+  <div class="sp-body">
+    <div class="sec-label">오늘 타임라인</div>
+    <div class="rtl">${rows}</div>
+    <div class="sec-label" style="margin-top:24px">리마크</div>
+    <div class="remark">${iss?iss.short:'등록된 이슈가 없습니다.'}</div>
+    <div class="sec-label" style="margin-top:8px">상태 변경 이력</div>
+    <div class="remark">현재 상태: ${statusLabel(r.status)}</div>
+  </div>`;
+}
+function slideIssue(id){
+  const i=S.issues.find(x=>x.id===id);if(!i)return'';
+  const r=room(i.room),t=TYPE[r.type];
+  const ts=toggleState(i); // 'open'/'resolved'/'recheck'
+  const resolveActive=ts==='open'; // 조치완료 active when not yet resolved
+  const raws=i.raws.map(rw=>`<div class="raw"><div class="raw-time">[${rw.time}]</div><div class="raw-txt">${rw.text}</div></div>`).join('');
+  const photos=i.photos.length?
+    `<div class="photos">${i.photos.map((p,idx)=>`<div class="thumb-wrap" data-act="lightbox" data-src="issue" data-id="${i.id}" data-idx="${idx}" tabindex="0"><img class="thumb" src="${p.url}" alt="첨부 사진"><span class="zoom">${IC.zoom}</span></div>`).join('')}</div>`
+    :`<div class="photo-ph">${IC.img} 첨부 사진 없음</div>`;
+  const aiRead=i.photos.length&&i.photos[0].ai_read?`<div class="ai-read">${IC.ai} ${i.photos[0].ai_read}</div>`:'';
+  const procT=[
+    {t:'현장 발화 접수',time:i.time,on:true},
+    {t:'AI 분류 · '+(i.urgency==='urgent'?'긴급':'일반')+' 판단',time:i.time,on:true},
+    {t:'객실관리자 확인 중',time:i.status==='resolved'?'완료':'진행',on:i.status!=='open'},
+    {t:'시설팀 조치',time:i.status==='resolved'?'완료':'예정',on:i.status==='resolved'},
+  ].map((x)=>`<div class="rtl-row"><div class="rtl-mark"><span class="rtl-dot" style="background:${x.on?'#f2602e':'#fff'};border:1px solid ${x.on?'#f2602e':'#d8d3ca'}"></span><span class="rtl-line"></span></div>
+    <div class="rtl-body ${x.on?'':'dim'}"><div class="l" style="font-weight:600;color:var(--fg)">${x.t}</div><div class="l">${x.time}</div></div></div>`).join('');
+  return`
+  <div class="sp-head"><div class="sp-htext">
+    <div class="sp-title"><span class="mono">${i.room}호</span>${i.urgency==='urgent'?'<span class="b-urg">긴급</span>':'<span class="b-norm">일반</span>'}</div>
+    <div class="sp-subtitle">${r.floor}F · ${i.kind}${i.kind==='시설'?'·'+(i.short.includes('누수')?'누수':'점검'):''}</div></div>
+    <button class="sp-close" data-act="slide-close">${IC.x}</button></div>
+  <div class="sp-body">
+    <div class="sec-label">이슈 요약</div>
+    <div class="issummary">${i.summary}</div>
+    <div class="sec-label">원문</div>
+    <div style="margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:8px">${raws}</div>
+    <div class="sec-label">첨부 사진 + AI 판독</div>
+    ${photos}${aiRead}
+    <div class="sec-label" style="margin-top:18px">조치 정보</div>
+    <div class="kv2"><span class="k">유형</span><span class="v">${i.kind} · ${i.urgency==='urgent'?'긴급':'일반'}</span></div>
+    <div class="kv2"><span class="k">신고</span><span class="v">${i.reporter} · ${i.time}</span></div>
+    <div class="kv2"><span class="k">담당</span><span class="v">시설팀 Owen</span></div>
+    <div class="kv2"><span class="k">현재 조치</span><span class="v">${i.status==='resolved'?'조치 완료':'객실관리자 확인 중'}</span></div>
+    <div class="sec-label" style="margin-top:18px">처리 타임라인</div>
+    <div class="rtl">${procT}</div>
+  </div>
+  <div class="sp-foot">
+    <button class="tg-btn ${resolveActive?'tg-off':'tg-on'}" data-act="issue-recheck" data-id="${i.id}" ${resolveActive?'disabled':''}>재점검 필요</button>
+    <button class="tg-btn ${resolveActive?'tg-on':'tg-off'}" data-act="issue-resolve" data-id="${i.id}" ${resolveActive?'':'disabled'}>${IC.check} 조치 완료 처리</button>
+  </div>`;
+}
+
+/* ============== RENDER: PHONE ============== */
+function renderPhone(){
+  const col=$('phoneCol');
+  col.classList.toggle('hidden',!S.showPhone);
+  if(!S.showPhone){col.innerHTML='';return;}
+  const cap=S.phoneRole==='hk'?'현장 앱 · 하우스키핑':'현장 앱 · 객실관리자';
+  let body='';
+  if(S.phoneRole==='hk'){
+    if(S.hkScreen==='list')body=hkList();
+    else body=hkWork();
+  }else{
+    if(S.rmScreen==='inbox')body=rmInbox();
+    else body=rmDetail();
+  }
+  col.innerHTML=`
+    <div class="phone-cap">${IC.phone} ${cap}</div>
+    <div class="phone"><div class="phone-screen">
+      <div class="island"></div>
+      <div class="role-toggle">
+        <div class="role-seg">
+          <button data-act="role" data-role="hk" class="${S.phoneRole==='hk'?'on':''}">${IC.hk}하우스키핑</button>
+          <button data-act="role" data-role="rm" class="${S.phoneRole==='rm'?'on':''}">${IC.shield}객실관리자</button>
+        </div>
+        <span class="role-note">${IC.swap}데모용 · 실서비스는 앱 분리</span>
+      </div>
+      <div class="phone-body">${body}</div>
+      ${renderSheet()}
+    </div></div>`;
+}
+function hkRooms(){
+  const p=PLAN['hk-kim'];const list=[];
+  if(p.cur)list.push({n:p.cur,k:'prog'});
+  p.todo.forEach(n=>list.push({n,k:'todo'}));
+  p.done.forEach(n=>list.push({n,k:'done'}));
+  return list;
+}
+function hkList(){
+  const st=staffStats('hk-kim');
+  const cards=hkRooms().map((it,idx)=>{
+    const r=room(it.n),t=TYPE[r.type];
+    if(it.k==='prog'){
+      return`<div class="hk-card active" data-act="hk-room" data-room="${it.n}">
+        <div class="hk-num go">${IC.stop.replace('30','14').replace('30','14')}</div>
+        <div class="hk-info"><div class="hk-rno">${it.n}호 <span class="hk-timer" data-timer="${it.n}">${fmtTimer(r.startMs)}</span><span class="tag-prog" style="margin-left:auto">진행중</span></div>
+          <div class="hk-meta">${r.type} ${t.label} · ${t.sla}분</div></div></div>`;
+    }
+    if(it.k==='todo'){
+      const soon=r.checkin?`<span class="tag-soon">⏰ ${r.checkin} 체크인 임박</span>`:'';
+      const num=p_index(it.n);
+      return`<div class="hk-card" data-act="hk-room" data-room="${it.n}">
+        <div class="hk-num">${num}</div>
+        <div class="hk-info"><div class="hk-rno">${it.n}호</div>
+          <div class="hk-meta">${r.type} ${t.label} · ${t.sla}분 ${soon}</div></div>
+        <span class="ir-arrow">${IC.cr}</span></div>`;
+    }
+    return`<div class="hk-card" data-act="hk-room" data-room="${it.n}">
+        <div class="hk-num">${IC.check}</div>
+        <div class="hk-info"><div class="hk-rno">${it.n}호</div>
+          <div class="hk-meta"><span class="tag-done">${IC.check} 준비완료</span></div></div></div>`;
+  }).join('');
+  return`<div class="hk-list">
+    <div class="hk-greet">Marcus 님</div>
+    <div class="hk-sub">배정 <b>${st.assigned}</b> · 완료 <b>${st.doneN}</b></div>
+    <div class="hk-label">내 작업 순서</div>${cards}</div>`;
+}
+function p_index(n){const todo=PLAN['hk-kim'].todo;const i=todo.indexOf(n);return i>=0?i+1:'';}
+function hkWork(){
+  const r=room(S.hkRoom),t=TYPE[r.type];
+  let mid='',foot='';
+  if(S.hkScreen==='start'){
+    mid=`<div class="work-body"><div style="font-size:18px;color:var(--fg-2);line-height:1.7">${t.label} 청소 · 기준 ${t.sla}분<br>준비되면 시작하세요.</div></div>`;
+    foot=`<button class="btn-big pri" data-act="clean-start">${IC.play} 청소 시작</button>`;
+  }else if(S.hkScreen==='progress'){
+    mid=`<div class="work-body"><div style="font-size:15px;color:var(--fg-3)">경과 시간</div>
+      <div class="timer" data-timer="${S.hkRoom}">${fmtTimer(r.startMs)}</div>
+      <div class="chip-cleaning"><span class="dot dot-cleaning"></span>청소중</div></div>`;
+    foot=`<button class="btn-big pri" data-act="clean-done">${IC.check} 청소 완료</button>
+          <button class="btn-big sec" data-act="sheet-open">${IC.micS} 이슈 말하기</button>`;
+  }else if(S.hkScreen==='done'){
+    const mins=r.doneMs&&r.startMs?Math.max(1,Math.round((r.doneMs-r.startMs)/60000)):24;
+    mid=`<div class="work-body"><div class="done-check">${IC.checkBig}</div>
+      <div style="font-size:24px;font-weight:700">완료 · 소요 ${mins}분</div>
+      <div style="font-size:15px;color:var(--fg-3)">대시보드로 전송되었습니다.</div></div>`;
+    foot=`<button class="btn-big sec" data-act="hk-back">목록으로</button>`;
+  }
+  return`<div class="work">
+    <div class="work-head"><div class="work-back" data-act="hk-back">${IC.cl} 목록</div>
+      <div class="work-rno">${S.hkRoom}호</div><div class="work-type">${r.type} ${t.label} · ${t.sla}분</div></div>
+    ${mid}<div class="work-foot">${foot}</div></div>`;
+}
+function rmList(){
+  return S.issues.filter(i=>i.urgency==='urgent').sort((a,b)=>(a.status==='resolved')-(b.status==='resolved'));
+}
+function rmInbox(){
+  const cards=rmList().map(i=>{
+    const done=i.status==='resolved';
+    return`<div class="rm-card ${done?'muted':''}" data-act="rm-issue" data-id="${i.id}">
+      <span class="rm-dot" style="background:${done?'#d8d3ca':'#d64545'}"></span>
+      <div class="rm-cinfo"><div class="rm-crno">${i.room}호 ${done?'<span class="badge-done">● 조치 완료</span>':'<span class="badge-urgent">긴급</span>'}</div>
+        <div class="rm-ctxt">${i.short}</div>
+        <div class="rm-cmeta">${i.time} · ${done?'조치 완료':'신고 '+i.reporter}</div></div>
+      ${done?'':`<span class="ir-arrow">${IC.cr}</span>`}</div>`;
+  }).join('');
+  return`<div class="rm">
+    <div class="rm-title">긴급 알림</div>
+    <div class="rm-sub">안전·시설 <b>긴급 이슈만</b> 알려드립니다</div>
+    <div class="rm-banner">${IC.bell} 소모품·일반 이슈는 디스패처가 자동 처리합니다</div>
+    ${cards}</div>`;
+}
+function rmDetail(){
+  const i=S.issues.find(x=>x.id===S.rmIssue);if(!i)return rmInbox();
+  const done=i.status==='resolved';
+  const photos=i.photos.length?
+    `<div class="photos" style="padding:0 16px">${i.photos.map((p,idx)=>`<div class="thumb-wrap" data-act="lightbox" data-src="issue" data-id="${i.id}" data-idx="${idx}" tabindex="0"><img class="thumb" src="${p.url}"><span class="zoom">${IC.zoom}</span></div>`).join('')}</div>`
+    :`<div class="photo-ph">${IC.img} 첨부 사진 + AI 판독 소견 (없음)</div>`;
+  return`<div class="rm-detail">
+    <div class="work-back" data-act="rm-back" style="margin-bottom:10px">${IC.cl} 긴급 알림</div>
+    <div class="work-rno" style="display:flex;align-items:center;gap:10px">${i.room}호 ${i.urgency==='urgent'?'<span class="b-urg">긴급</span>':''}</div>
+    <div class="rm-sub" style="margin-top:6px">${i.time} 발생 · 신고 ${i.reporter}</div>
+    <div class="ai-box"><div class="ai-head">${IC.ai} AI 정리</div><div class="ai-txt">${i.summary}</div></div>
+    <div class="kv"><span class="k">신고자</span><span class="v">${i.reporter} (하우스키핑)</span></div>
+    <div class="kv"><span class="k">현재 상태</span><span class="v">${done?'조치 완료':'판매 보류'}</span></div>
+    <div class="kv"><span class="k">분류</span><span class="v">${i.kind} · ${i.urgency==='urgent'?'긴급':'일반'}</span></div>
+    ${photos}</div>
+    ${done?'':`<div style="position:sticky;bottom:0;padding:16px;background:var(--bg)"><button class="btn-big pri" data-act="rm-resolve" data-id="${i.id}">${IC.check} 조치 완료</button></div>`}`;
+}
+
+/* ============== BOTTOM SHEET ============== */
+function renderSheet(){
+  if(!S.sheetOpen)return`<div class="sheet-scrim" id="sheetScrim"></div><div class="sheet" id="sheet"></div>`;
+  const rec=S.recState==='listening';
+  let micArea;
+  if(S.sttUnsupported){
+    micArea=`<div class="mic-btn disabled">${IC.mic}</div>
+      <div class="stt-alert">${IC.alert} 이 환경에서는 음성 인식을 지원하지 않습니다. 텍스트로 입력해 주세요.</div>`;
+  }else{
+    micArea=`<button class="mic-btn ${rec?'rec':''}" data-act="mic">${rec?IC.stop:IC.mic}</button>
+      <div class="wave ${rec?'rec':''}">${'<i></i>'.repeat(7)}</div>
+      <div class="sheet-hint">${rec?'듣고 있어요… 끝나면 다시 누르세요':'말씀하시고 끝내면 AI가 알아서 처리합니다'}</div>`;
+  }
+  const tShow=S.transcript||S.interim;
+  const transcriptBlock=tShow?`<div class="transcript" id="ttBox"><div class="transcript-h"><span class="dot dot-cleaning"></span>실시간 받아쓰기</div>
+    <div class="transcript-t" id="ttText">${S.transcript}<span style="color:var(--fg-3)">${S.interim}</span>${rec?'<span class="cursor-blink"></span>':''}</div></div>`:'';
+  const photoBlock=S.photos.length?`<div class="sheet-thumbs">${S.photos.map((p,idx)=>`<div class="sheet-thumb"><img src="${p.url}" data-act="lightbox" data-src="input" data-idx="${idx}" tabindex="0"><button class="rm-x" data-act="clear-photo" data-idx="${idx}">${IC.xs}</button></div>`).join('')}</div>`:'';
+  const errBlock=S.sttErr?`<div class="stt-alert">${IC.alert} ${S.sttErr}</div>`:'';
+  const canSend=(S.transcript.trim()||S.photos.length)&&!S.sending;
+  return`<div class="sheet-scrim on" id="sheetScrim"></div>
+  <div class="sheet on" id="sheet">
+    <div class="grab"></div>
+    <div class="sheet-head"><div class="sheet-title">이슈가 있나요?</div>
+      <div class="sheet-cur">현재 작업: <b>${S.hkRoom||'1001'}호</b> · 객실번호는 말하지 않아도 됩니다</div></div>
+    <div class="sheet-body">
+      ${micArea}
+      ${errBlock}
+      ${transcriptBlock}
+      ${photoBlock}
+      <div class="sheet-act">
+        <button class="sheet-link" data-act="type">${IC.kb} 텍스트로 입력</button>
+        <button class="sheet-link on" data-act="photo">${IC.cam} 사진 첨부</button>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="send-btn" data-act="send" ${canSend?'':'disabled'}>${IC.send} ${S.sending?'전송 중…':'전송'}</button></div>
+  </div>`;
+}
+/* partial transcript update — does NOT re-render sheet (protects recognition) */
+function updateTranscriptDOM(){
+  const el=$('ttText');
+  if(el){el.innerHTML=`${S.transcript}<span style="color:var(--fg-3)">${S.interim}</span>${S.recState==='listening'?'<span class="cursor-blink"></span>':''}`;}
+  else renderPhone(); // first transcript -> need block
+  const sendBtn=document.querySelector('[data-act="send"]');
+  if(sendBtn)sendBtn.disabled=!((S.transcript.trim()||S.photos.length)&&!S.sending);
+}
+
+/* ============== CONCEPT PANEL (§8-D) ============== */
+const CNODES=[
+ {g:'현장',tag:'현장',title:'하우스키핑 발화',data:'"1203호 청소 끝났어요. 그런데 욕실 타일에 금이 가 있어요."'},
+ {g:'현장',tag:'변환',title:'음성 → 텍스트',data:'발화를 실시간 텍스트로 받아씀'},
+ {g:'AI 처리',tag:'AI',title:'리스닝 에이전트',data:'내용 이해 · 핵심 추출'},
+ {g:'AI 처리',tag:'AI',title:'디스패처',data:'전체 보드 판단 중'},
+ {g:'결과·출력',tag:'대시보드',title:'객실 상태 보드',data:'1203호 청소완료 → 판매 보류'},
+ {g:'결과·출력',tag:'대시보드',title:'이슈 리마크',data:'1203 · 욕실 타일 균열'},
+ {g:'결과·출력',tag:'객실관리자',title:'긴급 알림',data:'[긴급] 1203호 욕실 타일 균열 — 확인 요망'},
+ {g:'결과·출력',tag:'하우스키핑 폰',title:'우선순위 재조정',data:'1순위 1108호 · 2순위 1203호'},
+];
+const CSTEPS=[
+ {eb:'시작 전',gray:false,text:'화면을 클릭하면 1203호 시나리오가 시작됩니다.',rb:'시나리오',rg:true,rt:'1203호 · 욕실 타일 균열 · 1108호 재배정',active:-1},
+ {eb:'1단계 · 발화',text:'하우스키핑이 청소 완료와 이슈를 한 번에 말합니다.',rb:'입력',rt:'"1203호 청소 끝났어요…"',active:0},
+ {eb:'2단계 · 변환',text:'음성이 실시간 텍스트로 변환됩니다.',rb:'STT',rt:'음성 → 텍스트',active:1},
+ {eb:'3단계 · 이해',text:'리스닝 에이전트가 발화를 이해합니다.',rb:'AI',rt:'핵심 추출 · 분류',active:2},
+ {eb:'4단계 · 판단',text:'디스패처가 전체 보드를 보고 무엇을 바꿀지 결정합니다.',rb:'AI',rt:'보드 전체 판단',active:3},
+ {eb:'5단계 · 보드 반영',text:'객실 상태가 자동 갱신됩니다.',rb:'대시보드',rt:'1203 → 판매 보류',active:4},
+ {eb:'6단계 · 알림',text:'긴급 이슈가 객실관리자에게 전달됩니다.',rb:'알림',rt:'[긴급] 1203 확인 요망',active:6},
+ {eb:'7단계 · 재배정',text:'하우스키핑 우선순위가 재조정됩니다.',rb:'하우스키핑',rt:'1순위 1108 · 2순위 1203',active:7},
+];
+function renderConcept(){
+  const step=CSTEPS[S.conceptStep],active=step.active;
+  if(S.conceptStep===0){
+    return`<div class="concept">
+      <div class="concept-canvas">${conceptNodes(-1)}</div>
+      <div class="concept-hero">
+        <div class="eb">MAREBITO · 작동 원리</div>
+        <h1>말 한마디가<br>호텔을 움직이는 과정</h1>
+        <div class="start">${IC.play} <span class="kbd">클릭</span> 또는 <span class="kbd">→</span> 으로 시작합니다</div>
+      </div>
+      ${dots()}</div>`;
+  }
+  return`<div class="concept">
+    <div class="concept-canvas">${conceptNodes(active)}</div>
+    <div class="player" data-act="concept-next">
+      <div class="player-half"><div class="ph-eyebrow">${step.eb}</div><div class="ph-text">${step.text}</div></div>
+      <div class="player-half"><div class="ph-eyebrow gray">${step.rb}</div><div class="ph-text">${step.rt}</div></div>
+    </div>
+    ${dots()}</div>`;
+}
+function conceptNodes(active){
+  const groups={'현장':[],'AI 처리':[],'결과·출력':[]};
+  CNODES.forEach((n,i)=>groups[n.g].push({...n,i}));
+  const col=(label,arr)=>`<div class="cgroup"><div class="cgroup-label">${label}</div>${arr.map(n=>`
+    <div class="cnode ${n.i===active?'active':''}"><div class="cn-head"><span class="cn-tag">${n.tag}</span></div>
+      <div class="cn-title">${n.title}</div><div class="cn-data">${n.data}</div></div>`).join('')}</div>`;
+  return`<div class="cnodes">${col('현장',groups['현장'])}${col('AI 처리',groups['AI 처리'])}${col('결과 · 출력',groups['결과·출력'])}</div>`;
+}
+function dots(){return`<div class="dots">${CSTEPS.map((_,i)=>`<i class="${i===S.conceptStep?'on':''}" data-act="concept-dot" data-step="${i}"></i>`).join('')}</div>`;}
+
+/* ============== LIGHTBOX (§10-B) ============== */
+function getLbPhotos(){
+  if(!S.lightbox)return[];
+  if(S.lightbox.src==='input')return S.photos;
+  const i=S.issues.find(x=>x.id===S.lightbox.id);return i?i.photos:[];
+}
+function renderLightbox(){
+  const lb=$('lightbox');
+  if(!S.lightbox){lb.classList.remove('on');lb.innerHTML='';document.documentElement.style.overflow='';return;}
+  const photos=getLbPhotos();
+  if(!photos.length){S.lightbox=null;lb.classList.remove('on');return;}
+  const idx=Math.min(S.lightbox.idx,photos.length-1);S.lightbox.idx=idx;
+  const p=photos[idx];
+  const nav=photos.length>1?`<button class="lb-nav lb-prev" data-act="lb-prev">${IC.cl}</button><button class="lb-nav lb-next" data-act="lb-next">${IC.cr}</button><div class="lb-idx">${idx+1} / ${photos.length}</div>`:'';
+  lb.innerHTML=`
+    <a class="lb-newtab" href="${p.url}" target="_blank" rel="noopener">${IC.ext} 새 탭으로 열기</a>
+    <button class="lb-close" data-act="lb-close">${IC.x}</button>
+    <img class="lb-img" src="${p.url}" alt="첨부 사진" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'lb-broken',textContent:'이미지를 불러올 수 없음'}))">
+    ${p.ai_read?`<div class="lb-read">${p.ai_read}</div>`:''}
+    ${nav}`;
+  lb.classList.add('on');document.documentElement.style.overflow='hidden';
+}
+
+/* ============== LANG COACH ============== */
+function renderCoach(){
+  const c=$('langCoach');
+  if(S.langCoachSeen){c.classList.remove('on');return;}
+  c.innerHTML=`<div class="lc-title">언어 선택</div>
+    <div class="lc-body">여기서 한국어 / English로 화면을 전환할 수 있어요.</div>
+    <button class="lc-ok" data-act="coach-ok">확인</button>`;
+  c.classList.add('on');
+}
+
+/* ============== TOAST ============== */
+let toastTimer;
+function toast(msg,key){
+  const t=$('pcToast');
+  t.innerHTML=(key?`<span class="tk">${key}</span>`:'')+`<span></span>`;
+  t.lastChild.textContent=msg; // free text via textContent
+  t.classList.add('on');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),3200);
+}
+function speak(txt){try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(txt);u.lang='ko-KR';speechSynthesis.cancel();speechSynthesis.speak(u);}}catch(e){console.warn('TTS',e);}}
+
+/* ============== RENDER ALL ============== */
+function renderAll(){renderGbar();renderDash();renderPhone();renderSlide();renderLightbox();renderCoach();}
+
+/* ============== STT MANAGER (§10-A) ============== */
+const STT={rec:null,state:'idle',supported:false,manualStop:false};
+(function detectSTT(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;STT.supported=!!SR;S.sttUnsupported=!SR;})();
+function makeRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;
+  const r=new SR();r.lang='ko-KR';r.continuous=true;r.interimResults=true;
+  r.onstart=()=>{STT.state='listening';S.recState='listening';S.sttErr='';renderPhone();};
+  r.onresult=(e)=>{let fin='',itm='';for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];if(res.isFinal)fin+=res[0].transcript;else itm+=res[0].transcript;}
+    if(fin)S.transcript=(S.transcript+' '+fin).trim();S.interim=itm;updateTranscriptDOM();};
+  r.onerror=(e)=>{
+    console.error('STT onerror:',e.error);
+    const msg={'not-allowed':'마이크 권한이 차단됨 — 주소창 자물쇠에서 허용해 주세요.','service-not-allowed':'음성 인식 서비스 권한이 차단되었습니다.','audio-capture':'마이크를 찾을 수 없습니다. 연결을 확인하세요.','network':'네트워크 오류로 음성 인식이 중단되었습니다.','no-speech':'음성이 감지되지 않았습니다. 다시 시도해 주세요.','aborted':'음성 인식이 중단되었습니다.','language-not-supported':'한국어 음성 인식이 지원되지 않는 환경입니다.'}[e.error]||('음성 인식 오류: '+e.error);
+    if(e.error!=='no-speech'&&e.error!=='aborted'){S.sttErr=msg;}
+    STT.state='idle';S.recState='idle';renderPhone();
+  };
+  r.onend=()=>{
+    if(STT.state==='listening'&&!STT.manualStop){try{r.start();return;}catch(err){console.error('restart fail',err);}}
+    STT.state='idle';S.recState='idle';renderPhone();
+  };
+  return r;
+}
+async function micToggle(){
+  if(!STT.supported){S.sttUnsupported=true;renderPhone();return;}
+  if(!window.isSecureContext){S.sttErr='HTTPS 또는 localhost에서만 음성 인식이 됩니다.';renderPhone();return;}
+  if(STT.state==='listening'){ // stop
+    STT.manualStop=true;STT.state='stopping';
+    try{STT.rec&&STT.rec.stop();}catch(e){console.warn(e);}
+    return;
+  }
+  if(STT.state!=='idle')return;
+  STT.state='starting';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    stream.getTracks().forEach(t=>t.stop());
+  }catch(e){
+    console.error('getUserMedia',e);
+    S.sttErr='마이크 권한이 차단됨 — 주소창 자물쇠에서 허용해 주세요.';
+    STT.state='idle';S.recState='idle';renderPhone();return;
+  }
+  STT.manualStop=false;
+  try{STT.rec=makeRec();STT.rec.start();}
+  catch(e){
+    console.error('start fail',e);
+    if(e.name==='InvalidStateError'){STT.rec=null;}
+    S.sttErr='음성 인식을 시작하지 못했습니다. 다시 눌러 주세요.';
+    STT.state='idle';S.recState='idle';renderPhone();
+  }
+}
+
+/* ============== /report (§10·§12) ============== */
+async function sendReport(){
+  if(S.sending)return;
+  if(!S.transcript.trim()&&!S.photos.length){toast('음성·사진·텍스트 중 하나를 입력하세요');return;}
+  S.sending=true;updateTranscriptDOM();renderPhone();
+  toast('에이전트 처리 중…','✓');
+  const photo=S.photos[0]||null;
+  const body={
+    text:S.transcript.trim(),
+    image_base64:photo?String(photo.url).split(',')[1]:null,
+    image_media_type:photo?photo.media_type:null,
+    board:S.rooms.map(r=>({id:r.id,status:r.status})),
+    room_hint:S.hkRoom||1001,
+    existing:S.issues.flatMap(i=>i.raws.map(rw=>rw.text)),
+  };
+  try{
+    const res=await fetch('/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){throw new Error('서버 응답 '+res.status);}
+    const d=await res.json();
+    applyResult(d,S.transcript.trim(),S.photos.slice());
+    closeSheet();
+  }catch(err){
+    console.error('/report 실패:',err);
+    toast('오류: '+err.message);
+  }finally{
+    S.sending=false;renderPhone();
+  }
+}
+function applyResult(d,rawText,photos){
+  const r=room(d.room);if(!r){toast('오류: 객실을 찾을 수 없습니다');return;}
+  const existingIssue=issueOf(d.room);
+  if(d.duplicate&&existingIssue){toast(d.room+'호 · 이미 접수된 내용입니다','•');return;}
+  if(!d.review){r.status=d.room_status||(d.has_issue?'hold':'ready');}
+  if(d.has_issue){
+    let iss=existingIssue;
+    if(iss){
+      if(!iss.raws.some(x=>x.text===rawText))iss.raws.push({time:nowHM(),text:rawText});
+      photos.forEach(p=>iss.photos.push({url:p.url,read:false,ai_read:d.ai_read}));
+      if(d.urgency==='urgent')iss.urgency='urgent';
+      if(!d.review){iss.summary=d.summary||iss.summary;iss.short=d.short||iss.short;}
+    }else{
+      iss={id:'is-'+d.room,room:Number(d.room),short:d.short||(rawText.slice(0,15)),summary:d.summary||rawText,raws:[{time:nowHM(),text:rawText}],photos:photos.map(p=>({url:p.url,read:false,ai_read:d.ai_read})),urgency:d.urgency||'normal',status:d.review?'review':'open',reporter:'Marcus',time:nowHM(),kind:d.kind||'시설'};
+      S.issues=S.issues.filter(x=>x.room!==Number(d.room));S.issues.unshift(iss);
+    }
+    if(iss.urgency==='urgent'&&!d.review)S.feed.unshift({time:nowHM(),room:Number(d.room),status:'확인',text:iss.short});
+  }else{ // cleaning complete
+    r.status='ready';r.doneMs=Date.now();r.inProgress=false;
+    const open=existingIssue;if(open)open.status='resolved';
+    S.feed.unshift({time:nowHM(),room:Number(d.room),status:'조치완료',text:'청소 완료'});
+  }
+  S.matrixFloor=r.floor;
+  toast(d.room+'호 · '+(d.message||'처리되었습니다'),d.has_issue?'⚠':'✓');
+  if(d.message)speak(d.message);
+  renderAll();
+}
+function nowHM(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+
+/* ============== ACTIONS ============== */
+function openSlide(type,id){S.slide={type,id};renderSlide();}
+function closeSlide(){S.slide=null;renderSlide();}
+function closeSheet(){S.sheetOpen=false;if(STT.state==='listening'){STT.manualStop=true;try{STT.rec&&STT.rec.stop();}catch(e){}}S.interim='';renderPhone();}
+function openSheet(){S.sheetOpen=true;S.sttErr='';renderPhone();}
+
+const fileInput=document.createElement('input');
+fileInput.type='file';fileInput.accept='image/*';fileInput.setAttribute('capture','environment');
+fileInput.style.display='none';document.body.appendChild(fileInput);
+fileInput.addEventListener('change',()=>{
+  const f=fileInput.files&&fileInput.files[0];if(!f){return;}
+  const reader=new FileReader();
+  reader.onload=()=>{S.photos.push({url:reader.result,media_type:f.type||'image/jpeg'});fileInput.value='';renderPhone();};
+  reader.onerror=()=>{console.error('파일 읽기 실패');toast('오류: 사진을 읽을 수 없습니다');};
+  reader.readAsDataURL(f);
+});
+
+/* ============== EVENT DELEGATION (no inline onclick) ============== */
+document.addEventListener('click',(e)=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  switch(a){
+    case'view':S.view=el.dataset.view;if(S.view==='concept')S.conceptStep=0;renderAll();break;
+    case'toggle-phone':S.showPhone=!S.showPhone;renderGbar();renderPhone();break;
+    case'lang':S.lang=el.dataset.lang;if(!S.langCoachSeen){S.langCoachSeen=true;renderCoach();}renderGbar();break;
+    case'coach-ok':S.langCoachSeen=true;renderCoach();break;
+    case'floor':S.matrixFloor=Number(el.dataset.floor);renderDash();break;
+    case'cell':{const n=el.dataset.room,iss=issueOf(n);if(iss&&iss.urgency==='urgent')openSlide('issue',iss.id);else openSlide('room',n);break;}
+    case'issue':openSlide('issue',el.dataset.id);break;
+    case'staff':openSlide('staff',el.dataset.id);break;
+    case'slide-close':closeSlide();break;
+    case'issue-resolve':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='open'){S.issueToggle[id]='resolved';const iss=S.issues.find(i=>i.id===id);iss.status='resolved';const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';renderSlide();renderDash();}break;}
+    case'issue-recheck':{const id=el.dataset.id;if(toggleState(S.issues.find(i=>i.id===id))==='resolved'){S.issueToggle[id]='open';const iss=S.issues.find(i=>i.id===id);iss.status='open';renderSlide();renderDash();}break;}
+    case'role':S.phoneRole=el.dataset.role;renderPhone();break;
+    case'hk-room':{const n=Number(el.dataset.room),r=room(n);S.hkRoom=n;S.hkScreen=r.status==='cleaning'?'progress':'start';renderPhone();break;}
+    case'hk-back':S.hkScreen='list';S.hkRoom=null;renderPhone();break;
+    case'clean-start':{const r=room(S.hkRoom);r.status='cleaning';r.startMs=Date.now();r.inProgress=true;S.hkScreen='progress';renderPhone();renderDash();break;}
+    case'clean-done':{const r=room(S.hkRoom);r.status='ready';r.doneMs=Date.now();r.inProgress=false;S.hkScreen='done';
+      const wl=S.workLog['hk-kim'];const ex=wl.find(w=>w.room===S.hkRoom);const mins=r.startMs?Math.max(1,Math.round((r.doneMs-r.startMs)/60000)):24;
+      if(ex){ex.active=false;ex.mins=mins;}else wl.push({room:S.hkRoom,type:r.type,mins,active:false});
+      S.feed.unshift({time:nowHM(),room:S.hkRoom,status:'조치완료',text:'청소 완료'});renderPhone();renderDash();break;}
+    case'sheet-open':openSheet();break;
+    case'sheet-close':closeSheet();break;
+    case'mic':micToggle();break;
+    case'photo':fileInput.click();break;
+    case'type':{const v=prompt('보고 내용을 입력하세요 (입력 후 전송 버튼)');if(v&&v.trim()){S.transcript=(S.transcript+' '+v.trim()).trim();renderPhone();}break;}
+    case'clear-photo':S.photos.splice(Number(el.dataset.idx),1);renderPhone();break;
+    case'send':sendReport();break;
+    case'rm-issue':S.rmIssue=el.dataset.id;S.rmScreen='detail';renderPhone();break;
+    case'rm-back':S.rmScreen='inbox';S.rmIssue=null;renderPhone();break;
+    case'rm-resolve':{const iss=S.issues.find(i=>i.id===el.dataset.id);iss.status='resolved';const r=room(iss.room);r.status=r.doneMs?'ready':'cleaning';const fi=S.feed.find(f=>f.room===iss.room);if(fi)fi.status='조치완료';S.rmScreen='inbox';renderPhone();renderDash();break;}
+    case'lightbox':{const src=el.dataset.src,idx=Number(el.dataset.idx);const photos=src==='input'?S.photos:(S.issues.find(i=>i.id===el.dataset.id)||{}).photos||[];if(!photos.length)break;S.lightbox={src,id:el.dataset.id,idx};window.__lbFocus=el;renderLightbox();break;}
+    case'lb-close':S.lightbox=null;renderLightbox();if(window.__lbFocus)try{window.__lbFocus.focus();}catch(e){}break;
+    case'lb-prev':{const p=getLbPhotos();S.lightbox.idx=(S.lightbox.idx-1+p.length)%p.length;renderLightbox();break;}
+    case'lb-next':{const p=getLbPhotos();S.lightbox.idx=(S.lightbox.idx+1)%p.length;renderLightbox();break;}
+    case'concept-next':S.conceptStep=Math.min(S.conceptStep+1,CSTEPS.length-1);renderDash();break;
+    case'concept-dot':S.conceptStep=Number(el.dataset.step);renderDash();break;
+  }
+});
+/* scrim closes */
+$('scrim').addEventListener('click',closeSlide);
+document.addEventListener('click',(e)=>{
+  if(e.target.id==='sheetScrim')closeSheet();
+  if(e.target.id==='lightbox'){S.lightbox=null;renderLightbox();if(window.__lbFocus)try{window.__lbFocus.focus();}catch(e2){}}
+});
+/* keyboard */
+document.addEventListener('keydown',(e)=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key==='f'||e.key==='F'){S.showPhone=!S.showPhone;renderGbar();renderPhone();}
+  if(e.key==='Escape'){if(S.lightbox){S.lightbox=null;renderLightbox();}else if(S.sheetOpen)closeSheet();else if(S.slide)closeSlide();}
+  if(e.key==='Enter'){const f=document.activeElement;if(f&&f.dataset&&f.dataset.act==='lightbox')f.click();}
+  if(S.view==='concept'&&(e.key==='ArrowRight'||e.key===' ')){S.conceptStep=Math.min(S.conceptStep+1,CSTEPS.length-1);renderDash();}
+  if(S.view==='concept'&&e.key==='ArrowLeft'){S.conceptStep=Math.max(S.conceptStep-1,0);renderDash();}
+});
+
+/* ============== STAGE FIT ============== */
+function fitStage(){const s=$('stage');if(!s)return;s.style.transform='scale('+Math.min(window.innerWidth/1920,window.innerHeight/1080)+')';}
+window.addEventListener('resize',fitStage);
+
+/* ============== TIMERS (1s) ============== */
+setInterval(()=>{
+  document.querySelectorAll('[data-timer]').forEach(el=>{
+    const r=room(el.dataset.timer);if(r&&r.startMs)el.textContent=fmtTimer(r.startMs);
+  });
+},1000);
+
+/* ============== INIT ============== */
+function init(){
+  fitStage();renderAll();
+  if(window.location.protocol==='file:'||!window.isSecureContext){console.warn('비보안 컨텍스트: 음성 인식이 제한될 수 있습니다.');}
+}
+init();
+</script>
+</body>
+</html>
